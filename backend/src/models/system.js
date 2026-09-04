@@ -57,6 +57,7 @@ const auditSchema = new Schema({
   at: { type: Date, default: Date.now },
 }, { versionKey: false });
 auditSchema.index({ at: -1 });
+auditSchema.index({ at: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 730 });
 export const AuditLog = model('AuditLog', auditSchema);
 
 const notificationSchema = new Schema({
