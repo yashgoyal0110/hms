@@ -56,7 +56,7 @@ export async function sendMessage({ patient, channel, to, subject, body, templat
 export async function notifyPatient(key, patient, vars = {}) {
   try {
     if (!patient) return;
-    const templates = await MessageTemplate.find({ key, active: true, autoSend: true });
+    const templates = await MessageTemplate.find({ key: new RegExp(`^${key}(_email)?$`), active: true, autoSend: true });
     if (!templates.length) return;
     const settings = await getSettings();
     const all = {
