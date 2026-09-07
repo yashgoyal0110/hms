@@ -22,7 +22,7 @@ export const MATRIX = {
   admin: all,
   doctor: {
     dashboard: 'r', patients: 'rw', appointments: 'rw', opd: 'rw', ipd: 'rw', wards: 'r', ot: 'rw',
-    lab: 'rw', radiology: 'rw', pharmacy: 'r', billing: 'r', reports: 'r', communication: 'rw',
+    lab: 'rw', radiology: 'rw', pharmacy: 'r', billing: 'r', reports: 'r', communication: 'rw', staff: 'r',
   },
   nurse: {
     dashboard: 'r', patients: 'rw', appointments: 'r', opd: 'rw', ipd: 'rw', wards: 'rw', ot: 'r',
