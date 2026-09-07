@@ -143,6 +143,11 @@ po.post('/:id/receive', can('inventory', 'rw'), async (req, res) => {
   doc.status = 'Received';
   doc.receivedAt = new Date();
   await doc.save();
+  const hasMeds = doc.items.some((i) => i.itemType === 'Medicine');
+  await LedgerEntry.create({
+    entryNo: await nextCode('LED'), type: 'Expense', category: hasMeds ? 'Pharmacy Purchases' : 'Medical Supplies', amount: doc.total,
+    mode: 'Bank Transfer', description: `Purchase order ${doc.poNo}`, payee: doc.supplier.name, reference: doc.poNo, auto: true, createdBy: req.user._id,
+  });
   res.json(doc);
 });
 export const purchaseOrdersRouter = po;
