@@ -8,8 +8,9 @@ import { crudRouter } from '../utils/crud.js';
 import { badRequest, clean, notFound } from '../utils/http.js';
 import { paginate, searchFilter } from '../utils/query.js';
 
+// Department list is open to all signed-in users because every form needs it.
 export const departmentsRouter = crudRouter(Department, {
-  module: 'staff', search: ['name', 'code'], filters: ['type'], populate: { path: 'head', select: 'name' }, label: 'Department',
+  module: 'staff', search: ['name', 'code'], filters: ['type'], populate: { path: 'head', select: 'name' }, label: 'Department', openList: true,
 });
 
 export const usersRouter = Router();

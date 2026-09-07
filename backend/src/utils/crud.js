@@ -6,11 +6,11 @@ import { paginate, searchFilter } from './query.js';
 
 /** Build standard list/get/create/update/delete routes for simple master-data collections. */
 export function crudRouter(Model, {
-  module, search = [], filters = [], populate, sort = 'name', codePrefix, label = 'Record', softDelete = true,
+  module, search = [], filters = [], populate, sort = 'name', codePrefix, label = 'Record', softDelete = true, openList = false,
 }) {
   const r = Router();
 
-  r.get('/', can(module, 'r'), async (req, res) => {
+  r.get('/', ...(openList ? [] : [can(module, 'r')]), async (req, res) => {
     const filter = { ...searchFilter(req.query.q, search) };
     for (const f of filters) if (req.query[f]) filter[f] = req.query[f];
     if (req.query.active === 'true' || req.query.active === 'false') filter.active = req.query.active === 'true';
