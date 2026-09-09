@@ -21,6 +21,7 @@ export function errorHandler(err, req, res, _next) {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
     return res.status(409).json({ message: `A record with this ${field} already exists` });
   }
+  if (err?.type === 'entity.too.large') return res.status(413).json({ message: 'Request too large' });
   if (err?.type === 'entity.parse.failed') return res.status(400).json({ message: 'Malformed JSON body' });
   console.error('[error]', req.method, req.originalUrl, err);
   res.status(500).json({ message: 'Internal server error' });
