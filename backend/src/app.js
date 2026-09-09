@@ -5,6 +5,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import mongoSanitize from 'express-mongo-sanitize';
+import rateLimit from 'express-rate-limit';
 import { config } from './config.js';
 import { authenticate } from './middleware/auth.js';
 import { auditTrail } from './middleware/audit.js';
@@ -37,6 +38,7 @@ export function createApp() {
   app.use(cookieParser());
   app.use(mongoSanitize());
   app.use(morgan(config.isProd ? 'combined' : 'dev', { skip: (req) => req.path === '/api/public/health' }));
+  app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 600, standardHeaders: 'draft-7', legacyHeaders: false }));
 
   app.use('/api/public', publicRoutes);
   app.use('/api/auth', authRoutes);
