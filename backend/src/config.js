@@ -40,3 +40,7 @@ export const config = {
     sender: process.env.SMS_SENDER_ID || 'HOSPTL',
   },
 };
+
+if (isProd && config.jwtSecret.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters in production');
+}
