@@ -8,7 +8,7 @@ export function ToastProvider({ children }) {
   const push = useCallback((message, type = 'info') => {
     const id = Math.random().toString(36).slice(2);
     setItems((l) => [...l, { id, message, type }]);
-    setTimeout(() => setItems((l) => l.filter((t) => t.id !== id)), 3500);
+    setTimeout(() => setItems((l) => l.filter((t) => t.id !== id)), type === 'error' ? 6000 : 3500);
   }, []);
   const api = useCallback(Object.assign((m, t) => push(m, t), {
     success: (m) => push(m, 'success'),
