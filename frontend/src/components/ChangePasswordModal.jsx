@@ -11,6 +11,7 @@ export default function ChangePasswordModal({ open, onClose }) {
   const submit = async (e) => {
     e?.preventDefault();
     setError(null);
+    if (form.newPassword !== form.confirm) { setError(new Error('New passwords do not match')); return; }
     setBusy(true);
     try {
       await api.post('/auth/change-password', form);
@@ -26,6 +27,7 @@ export default function ChangePasswordModal({ open, onClose }) {
         <ErrorBox error={error} />
         <Field label="Current password" required><input {...bind('currentPassword')} autoComplete="current-password" /></Field>
         <Field label="New password" required hint="Minimum 8 characters with upper-case, lower-case and a number"><input {...bind('newPassword')} /></Field>
+        <Field label="Confirm new password" required><input {...bind('confirm')} /></Field>
       </form>
     </Modal>
   );
