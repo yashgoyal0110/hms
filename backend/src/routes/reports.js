@@ -62,6 +62,12 @@ r.get('/dashboard', can('dashboard', 'r'), async (req, res) => {
     trend.push({ date: key, total: revenueTrend.find((x) => x._id === key)?.total || 0 });
   }
 
+  let myQueue = null;
+  if (role === 'doctor') {
+    myQueue = await Appointment.find({ doctor: req.user._id, date: { $gte: start, $lt: end }, status: { $in: ['Scheduled', 'Checked-in', 'In-consultation'] } })
+      .sort('tokenNo timeSlot').limit(10).populate('patient', 'uhid firstName lastName gender dob');
+  }
+
   res.json({
     kpis: {
       todayAppointments: todayAppts,
@@ -85,6 +91,7 @@ r.get('/dashboard', can('dashboard', 'r'), async (req, res) => {
     revenueTrend: finance ? trend : null,
     departmentLoad: deptLoad.map((d) => ({ department: d.name, count: d.n })),
     recentAdmissions,
+    myQueue,
   });
 });
 
