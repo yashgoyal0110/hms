@@ -18,6 +18,7 @@ r.get('/', can('patients', 'r'), async (req, res) => {
 
 r.post('/', can('patients', 'rw'), async (req, res) => {
   const data = clean(req.body, ['uhid', 'registeredBy']);
+  const { chargeRegistration } = req.body;
   delete data.chargeRegistration;
   const dup = await Patient.findOne({ phone: data.phone, firstName: new RegExp(`^${String(data.firstName || '').replace(/[^\w ]/g, '')}$`, 'i') });
   if (dup && !req.body.allowDuplicate) {
@@ -25,6 +26,15 @@ r.post('/', can('patients', 'rw'), async (req, res) => {
   }
   delete data.allowDuplicate;
   const patient = await Patient.create({ ...data, uhid: await nextCode('UH', { yearly: false, pad: 6, sep: '' }), registeredBy: req.user._id });
+  if (chargeRegistration) {
+    const s = await getSettings();
+    if (s.registrationFee > 0) {
+      await addCharges({
+        patientId: patient._id, type: 'OPD', userId: req.user._id, forceSeparate: true,
+        items: [{ description: 'Patient registration', category: 'Registration', quantity: 1, rate: s.registrationFee }],
+      });
+    }
+  }
   res.status(201).json(patient);
 });
 
