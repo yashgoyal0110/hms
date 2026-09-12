@@ -1,8 +1,9 @@
 import Pending from './pages/Pending.jsx';
+import PatientsModule from './pages/patients/index.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
-  { path: '/patients/*', module: 'patients', element: <Pending title="Patients" /> },
+  { path: '/patients/*', module: 'patients', element: <PatientsModule /> },
   { path: '/appointments', module: 'appointments', element: <Pending title="Appointments & Queue" /> },
   { path: '/opd/*', module: 'opd', element: <Pending title="OPD Consultations" /> },
   { path: '/ipd/*', module: 'ipd', element: <Pending title="IPD Admissions" /> },
