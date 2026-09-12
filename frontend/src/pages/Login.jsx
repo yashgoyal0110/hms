@@ -88,7 +88,7 @@ export default function Login() {
               </div>
             </>
           )}
-          <p className="muted small" style={{ marginTop: 28 }}>Access is monitored and recorded. Unauthorsied use is prohibited.</p>
+          <p className="muted small" style={{ marginTop: 28 }}>Access is monitored and recorded. Unauthorised use is prohibited.</p>
         </div>
       </main>
     </div>
