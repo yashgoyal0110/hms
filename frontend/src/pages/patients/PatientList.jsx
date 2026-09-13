@@ -18,6 +18,15 @@ export default function PatientList() {
   const dq = useDebounced(q);
   const { data, loading } = useFetch('/patients', { q: dq, gender, page, limit: 25 });
 
+  const exportCsv = async () => {
+    const all = await api.get('/patients', { q: dq, gender, limit: 500 });
+    downloadCsv('patients.csv', all.data, [
+      { label: 'UHID', value: 'uhid' }, { label: 'Name', value: (p) => fullName(p) }, { label: 'Gender', value: 'gender' },
+      { label: 'DOB', value: (p) => date(p.dob) }, { label: 'Phone', value: 'phone' }, { label: 'Email', value: 'email' },
+      { label: 'City', value: (p) => p.address?.city }, { label: 'Blood group', value: 'bloodGroup' }, { label: 'Registered', value: (p) => date(p.createdAt) },
+    ]);
+  };
+
   return (
     <>
       <PageHeader
@@ -25,6 +34,7 @@ export default function PatientList() {
         sub="Master patient index - registration and electronic medical records"
         actions={(
           <>
+            <Button icon={Download} onClick={exportCsv}>Export</Button>
             {can('patients', 'rw') && <Button variant="primary" icon={UserPlus} onClick={() => navigate('/patients/new')}>Register patient</Button>}
           </>
         )}
