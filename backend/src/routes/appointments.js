@@ -130,7 +130,7 @@ r.post('/:id/status', can('appointments', 'rw'), async (req, res) => {
     appt.checkedInAt = new Date();
     if (bill && !appt.invoice) {
       const settings = await getSettings();
-      const fee = appt.doctor.consultationFee || settings.defaultConsultationFee;
+      const fee = appt.type === 'Follow-up' ? Math.round((appt.doctor.consultationFee || settings.defaultConsultationFee) / 2) : (appt.doctor.consultationFee || settings.defaultConsultationFee);
       if (fee > 0) {
         const inv = await addCharges({
           patientId: appt.patient, type: 'OPD', userId: req.user._id, appointment: appt._id,
