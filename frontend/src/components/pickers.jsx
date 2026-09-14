@@ -110,3 +110,39 @@ export function TagInput({ value = [], onChange, placeholder }) {
     </div>
   );
 }
+
+/** Medicine search against pharmacy master; free text allowed. */
+export function MedicineSearch({ onPick, placeholder = 'Search medicine by brand or generic name', inStock }) {
+  const [q, setQ] = useState('');
+  const [list, setList] = useState([]);
+  const [open, setOpen] = useState(false);
+  const dq = useDebounced(q, 200);
+  useEffect(() => {
+    if (!dq.trim()) { setList([]); return; }
+    api.get('/pharmacy/medicines', { q: dq, limit: 10, inStock: inStock ? 'true' : undefined }).then((r) => setList(r.data)).catch(() => setList([]));
+  }, [dq, inStock]);
+  const pick = (m) => { onPick(m); setQ(''); setOpen(false); };
+  return (
+    <div className="combo">
+      <input
+        className="input"
+        value={q}
+        placeholder={placeholder}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (list[0]) pick(list[0]); else if (q.trim() && !inStock) pick({ name: q.trim() }); } }}
+      />
+      {open && q && (
+        <div className="combo-list">
+          {list.map((m) => (
+            <div key={m._id} className="combo-item" onMouseDown={() => pick(m)}>
+              <div className="row between"><span className="cell-main">{m.name} <span className="muted small">{m.strength}</span></span><span className={`small ${m.stock <= 0 ? 'danger-text' : 'muted'}`}>Stock {m.stock}</span></div>
+              <div className="cell-sub">{m.genericName} · {m.form} · {m.manufacturer}</div>
+            </div>
+          ))}
+          {!inStock && <div className="combo-item muted" onMouseDown={() => pick({ name: q.trim() })}>Use “{q}” as free text</div>}
+        </div>
+      )}
+    </div>
+  );
+}
