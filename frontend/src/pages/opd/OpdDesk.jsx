@@ -44,6 +44,7 @@ export default function OpdDesk() {
       <PageHeader
         title="OPD Consultations"
         sub="Consultation desk - patient queue, clinical notes and prescriptions"
+        actions={can('opd', 'rw') && <Button variant="primary" icon={Plus} onClick={() => setWalkIn(true)}>New consultation</Button>}
       />
       <Card flush>
         <div className="card-header">
@@ -96,6 +97,33 @@ export default function OpdDesk() {
           </>
         )}
       </Card>
+      <WalkIn open={walkIn} onClose={() => setWalkIn(false)} defaultDoctor={role === 'doctor' ? user._id : ''} onCreated={(e) => navigate(`/opd/${e._id}`)} />
     </>
+  );
+}
+
+function WalkIn({ open, onClose, onCreated, defaultDoctor }) {
+  const [patient, setPatient] = useState(null);
+  const [doctor, setDoctor] = useState(defaultDoctor);
+  const [type, setType] = useState('OPD');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    setBusy(true); setError(null);
+    try {
+      const e = await api.post('/encounters', { patient: patient?._id, doctor, type });
+      onCreated(e);
+    } catch (err) { setError(err); } finally { setBusy(false); }
+  };
+  return (
+    <Modal open={open} onClose={onClose} title="New consultation" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} disabled={!patient || !doctor} onClick={submit}>Start</Button></>}>
+      <div className="stack">
+        <ErrorBox error={error} />
+        <p className="muted small">Use this for emergency or in-patient reviews that are not linked to an appointment. For regular OPD visits, book and check in the appointment first so that a token and consultation bill are generated.</p>
+        <Field label="Patient" required><PatientPicker value={patient} onChange={setPatient} autoFocus /></Field>
+        <Field label="Doctor" required><StaffSelect role="doctor" value={doctor} onChange={setDoctor} /></Field>
+        <Field label="Encounter type"><Select value={type} onChange={(e) => setType(e.target.value)} options={['OPD', 'Emergency', 'IPD']} /></Field>
+      </div>
+    </Modal>
   );
 }
