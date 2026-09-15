@@ -18,6 +18,11 @@ import Prescription from '../../components/Prescription.jsx';
 import TestSelector from '../../components/TestSelector.jsx';
 
 const FREQS = ['1-0-0', '0-1-0', '0-0-1', '1-0-1', '1-1-1', '1-1-1-1', '0-0-1 (HS)', 'SOS', 'Stat', 'Once a week'];
+const COMMON_DX = [
+  ['J06.9', 'Upper respiratory tract infection'], ['A09', 'Acute gastroenteritis'], ['I10', 'Essential hypertension'], ['E11.9', 'Type 2 diabetes mellitus'],
+  ['N39.0', 'Urinary tract infection'], ['M54.5', 'Low back pain'], ['R51', 'Headache'], ['A90', 'Dengue fever'], ['J20.9', 'Acute bronchitis'], ['K21.9', 'Gastro-oesophageal reflux disease'],
+];
+
 export default function Consultation() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -166,6 +171,7 @@ export default function Consultation() {
                   <input className="input" style={{ flex: 1 }} placeholder="Type a diagnosis and press Enter" value={dxText} onChange={(e) => setDxText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addDx('', dxText); } }} />
                   <Button icon={Plus} onClick={() => addDx('', dxText)}>Add</Button>
                 </div>
+                <div className="mt-8">{COMMON_DX.map(([c, d]) => <button type="button" key={c} className="tag" style={{ border: 0, cursor: 'pointer' }} onClick={() => addDx(c, d)}>{d}</button>)}</div>
               </>
             )}
           </Card>
