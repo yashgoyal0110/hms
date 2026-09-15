@@ -9,7 +9,7 @@ import { notifyStaff } from '../services/notify.js';
 import {
   badRequest, clean, conflict, notFound,
 } from '../utils/http.js';
-import { paginate, searchFilter } from '../utils/query.js';
+import { escapeRegex, paginate, searchFilter } from '../utils/query.js';
 
 export const wardsRouter = Router();
 export const admissionsRouter = Router();
@@ -91,7 +91,7 @@ admissionsRouter.get('/', can('ipd', 'r'), async (req, res) => {
   if (req.query.patient) filter.patient = req.query.patient;
   if (req.query.q) {
     const pts = await Patient.find(searchFilter(req.query.q, ['uhid', 'firstName', 'lastName', 'phone'])).select('_id').limit(200);
-    filter.$or = [{ patient: { $in: pts.map((p) => p._id) } }, { admissionNo: { $regex: req.query.q, $options: 'i' } }];
+    filter.$or = [{ patient: { $in: pts.map((p) => p._id) } }, { admissionNo: { $regex: escapeRegex(req.query.q), $options: 'i' } }];
   }
   res.json(await paginate(Admission, filter, req, { sort: '-admittedAt', populate: admPopulate, select: '-notes' }));
 });
