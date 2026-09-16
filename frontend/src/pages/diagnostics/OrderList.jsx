@@ -133,8 +133,63 @@ function Catalogue({ category }) {
           { key: 'tat', label: 'TAT', align: 'right', render: (t) => `${t.turnaroundHours} h` },
           { key: 'price', label: 'Price', align: 'right', render: (t) => money(t.price) },
           { key: 'st', label: 'Status', render: (t) => (t.active ? <Badge tone="success">Active</Badge> : <Badge>Inactive</Badge>) },
+          { key: 'x', label: '', className: 'actions-cell', render: (t) => can(category, 'rw') && <Button size="sm" icon={Pencil} onClick={() => setEdit(t)} aria-label="Edit" /> },
         ]}
       />
+      <TestEditor test={edit} onClose={() => setEdit(null)} onDone={reload} />
     </Card>
+  );
+}
+
+function TestEditor({ test, onClose, onDone }) {
+  const toast = useToast();
+  const [f, setF] = useState(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setF(test ? JSON.parse(JSON.stringify(test)) : null); }, [test]);
+  if (!f) return null;
+  const b = (k, num) => ({ value: f[k] ?? '', onChange: (e) => setF({ ...f, [k]: num ? Number(e.target.value) : e.target.value }) });
+  const setP = (i, k, v) => setF({ ...f, parameters: f.parameters.map((p, j) => (j === i ? { ...p, [k]: v } : p)) });
+  const save = async () => {
+    setBusy(true);
+    try {
+      const body = { ...f, parameters: f.parameters.map((p) => ({ ...p, low: p.low === '' ? undefined : p.low, high: p.high === '' ? undefined : p.high })) };
+      if (f._id) await api.put(`/lab-tests/${f._id}`, body); else await api.post('/lab-tests', body);
+      toast.success('Catalogue updated'); onDone(); onClose();
+    } catch (e) { toast.error(e); } finally { setBusy(false); }
+  };
+  return (
+    <Modal open onClose={onClose} size="lg" title={f._id ? `Edit ${f.name}` : 'Add to catalogue'} footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={save}>Save</Button></>}>
+      <div className="form-grid">
+        <Field label="Code" required><input className="input" {...b('code')} disabled={Boolean(f._id)} /></Field>
+        <Field label="Name" required className="span-2"><input className="input" {...b('name')} /></Field>
+        <Field label="Section" required><input className="input" {...b('section')} placeholder={f.category === 'lab' ? 'e.g. Biochemistry' : 'e.g. CT Scan'} /></Field>
+        {f.category === 'lab' && <Field label="Sample type"><input className="input" {...b('sampleType')} /></Field>}
+        <Field label="Price" required><input type="number" className="input" {...b('price', true)} /></Field>
+        <Field label="Turnaround (hours)"><input type="number" className="input" {...b('turnaroundHours', true)} /></Field>
+        <Field label="Status"><Select value={f.active ? 'true' : 'false'} onChange={(e) => setF({ ...f, active: e.target.value === 'true' })} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} /></Field>
+      </div>
+      {f.category === 'lab' && (
+        <>
+          <div className="form-section-title mt-16">Result parameters</div>
+          <table className="table">
+            <thead><tr><th>Parameter</th><th>Unit</th><th>Reference range (text)</th><th>Low</th><th>High</th><th /></tr></thead>
+            <tbody>
+              {f.parameters.map((p, i) => (
+                <tr key={i}>
+                  <td><input className="input" value={p.name || ''} onChange={(e) => setP(i, 'name', e.target.value)} /></td>
+                  <td><input className="input" value={p.unit || ''} onChange={(e) => setP(i, 'unit', e.target.value)} style={{ width: 90 }} /></td>
+                  <td><input className="input" value={p.refRange || ''} onChange={(e) => setP(i, 'refRange', e.target.value)} /></td>
+                  <td><input className="input" type="number" step="any" value={p.low ?? ''} onChange={(e) => setP(i, 'low', e.target.value === '' ? '' : Number(e.target.value))} style={{ width: 80 }} /></td>
+                  <td><input className="input" type="number" step="any" value={p.high ?? ''} onChange={(e) => setP(i, 'high', e.target.value === '' ? '' : Number(e.target.value))} style={{ width: 80 }} /></td>
+                  <td><Button size="sm" variant="ghost" icon={Trash2} onClick={() => setF({ ...f, parameters: f.parameters.filter((_, j) => j !== i) })} aria-label="Remove" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Button size="sm" icon={Plus} className="mt-8" onClick={() => setF({ ...f, parameters: [...f.parameters, { name: '', unit: '', refRange: '' }] })}>Add parameter</Button>
+          <p className="small muted mt-8">Low / high limits are used to flag results automatically (H / L, and Critical beyond 2× / 0.5×).</p>
+        </>
+      )}
+    </Modal>
   );
 }
