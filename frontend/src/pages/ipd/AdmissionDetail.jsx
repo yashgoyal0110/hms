@@ -68,7 +68,7 @@ export default function AdmissionDetail() {
 
       <div className="grid grid-main-side">
         <div>
-          <Tabs value={tab} onChange={setTab} tabs={[{ value: 'notes', label: 'Clinical notes', count: a.notes.length }, { value: 'beds', label: 'Bed history' }, ...(a.dischargeSummary?.finalDiagnosis ? [{ value: 'dis', label: 'Discharge summary' }] : [])]} />
+          <Tabs value={tab} onChange={setTab} tabs={[{ value: 'notes', label: 'Clinical notes', count: a.notes.length }, { value: 'vitals', label: 'Vitals chart', count: vitals.length }, { value: 'beds', label: 'Bed history' }, ...(a.dischargeSummary?.finalDiagnosis ? [{ value: 'dis', label: 'Discharge summary' }] : [])]} />
           {tab === 'notes' && (
             <Card>
               {a.notes.length ? (
@@ -86,6 +86,23 @@ export default function AdmissionDetail() {
                   ))}
                 </ul>
               ) : <p className="muted">No notes recorded.</p>}
+            </Card>
+          )}
+          {tab === 'vitals' && (
+            <Card flush>
+              <DataTable
+                rows={[...vitals].reverse()}
+                empty="No vitals recorded"
+                columns={[
+                  { key: 'at', label: 'Recorded', render: (n) => dateTime(n.at) },
+                  { key: 'bp', label: 'BP', render: (n) => (n.vitals.bpSystolic ? `${n.vitals.bpSystolic}/${n.vitals.bpDiastolic}` : '-') },
+                  { key: 'p', label: 'Pulse', align: 'right', render: (n) => n.vitals.pulse ?? '-' },
+                  { key: 't', label: 'Temp °F', align: 'right', render: (n) => <span className={n.vitals.temperature > 100.4 ? 'danger-text strong' : ''}>{n.vitals.temperature ?? '-'}</span> },
+                  { key: 's', label: 'SpO₂', align: 'right', render: (n) => <span className={n.vitals.spo2 && n.vitals.spo2 < 94 ? 'danger-text strong' : ''}>{n.vitals.spo2 ?? '-'}</span> },
+                  { key: 'r', label: 'RR', align: 'right', render: (n) => n.vitals.respRate ?? '-' },
+                  { key: 'by', label: 'By', render: (n) => n.by?.name },
+                ]}
+              />
             </Card>
           )}
           {tab === 'beds' && (
