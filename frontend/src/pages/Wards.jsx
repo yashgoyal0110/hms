@@ -34,7 +34,7 @@ export default function Wards() {
 
   return (
     <>
-      <PageHeader title="Wards & Beds" sub="Live bed board across all wards" />
+      <PageHeader title="Wards & Beds" sub="Live bed board across all wards" actions={can('wards', 'rw') && <Button variant="primary" icon={Plus} onClick={() => setAddWard(true)}>Add ward</Button>} />
       <div className="grid grid-4 mb-16">
         <Stat label="Total beds" value={all.length} foot={`${wards.length} wards`} />
         <Stat label="Occupied" value={count('Occupied')} foot={`${all.length ? Math.round((count('Occupied') / all.length) * 100) : 0}% occupancy`} tone="danger" />
@@ -87,6 +87,34 @@ export default function Wards() {
           </div>
         )}
       </Modal>
+      <WardModal open={addWard} onClose={() => setAddWard(false)} onDone={reload} />
     </>
+  );
+}
+
+function WardModal({ open, onClose, onDone }) {
+  const toast = useToast();
+  const [f, setF] = useState({ name: '', code: '', type: 'General', floor: '', dailyRate: 1000, nursingRate: 300, gender: 'Any', bedCount: 10 });
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const b = (k, num) => ({ value: f[k], onChange: (e) => setF({ ...f, [k]: num ? Number(e.target.value) : e.target.value }) });
+  const submit = async () => {
+    setBusy(true); setError(null);
+    try { await api.post('/wards', f); toast.success('Ward created'); onDone(); onClose(); } catch (e) { setError(e); } finally { setBusy(false); }
+  };
+  return (
+    <Modal open={open} onClose={onClose} title="Add ward" footer={<><Button onClick={onClose}>Cancel</Button><Button variant="primary" loading={busy} onClick={submit}>Create ward</Button></>}>
+      <ErrorBox error={error} />
+      <div className="form-grid mt-8">
+        <Field label="Ward name" required className="span-2"><input className="input" {...b('name')} /></Field>
+        <Field label="Code" required hint="Used as bed prefix"><input className="input" {...b('code')} /></Field>
+        <Field label="Type"><Select {...b('type')} options={['General', 'Semi-Private', 'Private', 'Deluxe', 'ICU', 'NICU', 'HDU', 'Emergency', 'Maternity']} /></Field>
+        <Field label="Floor"><input className="input" {...b('floor')} /></Field>
+        <Field label="Gender"><Select {...b('gender')} options={['Any', 'Male', 'Female']} /></Field>
+        <Field label="Bed charge / day"><input type="number" className="input" {...b('dailyRate', true)} /></Field>
+        <Field label="Nursing charge / day"><input type="number" className="input" {...b('nursingRate', true)} /></Field>
+        <Field label="Number of beds"><input type="number" className="input" min="1" max="200" {...b('bedCount', true)} /></Field>
+      </div>
+    </Modal>
   );
 }
