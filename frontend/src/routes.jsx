@@ -5,6 +5,7 @@ import OpdModule from './pages/opd/index.jsx';
 import IpdModule from './pages/ipd/index.jsx';
 import Wards from './pages/Wards.jsx';
 import DiagnosticsModule from './pages/diagnostics/index.jsx';
+import Pharmacy from './pages/Pharmacy.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
@@ -16,7 +17,7 @@ export const routes = [
   { path: '/ot', module: 'ot', element: <Pending title="Operation Theatre" /> },
   { path: '/laboratory/*', module: 'lab', element: <DiagnosticsModule category="lab" /> },
   { path: '/radiology/*', module: 'radiology', element: <DiagnosticsModule category="radiology" /> },
-  { path: '/pharmacy', module: 'pharmacy', element: <Pending title="Pharmacy" /> },
+  { path: '/pharmacy', module: 'pharmacy', element: <Pharmacy /> },
   { path: '/inventory', module: 'inventory', element: <Pending title="Inventory & Purchase" /> },
   { path: '/billing/*', module: 'billing', element: <Pending title="Billing" /> },
   { path: '/insurance', module: 'insurance', element: <Pending title="Insurance Claims" /> },
