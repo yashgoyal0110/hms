@@ -11,6 +11,11 @@ import {
 import { PatientPicker } from '../../components/pickers.jsx';
 
 const blank = () => ({ description: '', category: 'Procedure', quantity: 1, rate: '', taxRate: 0 });
+const PRESETS = [
+  ['Dressing - minor', 'Procedure', 250], ['Injection administration', 'Nursing', 100], ['Nebulisation', 'Procedure', 200], ['ECG', 'Procedure', 300],
+  ['Suturing - minor', 'Procedure', 800], ['Plaster application', 'Procedure', 1500], ['Ambulance - local', 'Other', 1200], ['Medical certificate', 'Other', 300],
+];
+
 export default function InvoiceNew() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -81,6 +86,10 @@ export default function InvoiceNew() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-8">
+              <span className="small muted">Quick add: </span>
+              {PRESETS.map(([d, c, r]) => <button type="button" key={d} className="tag" style={{ border: 0, cursor: 'pointer' }} onClick={() => setItems([...items.filter((x) => x.description), { description: d, category: c, quantity: 1, rate: r, taxRate: 0 }])}>{d}</button>)}
             </div>
           </Card>
           <Card title="Notes"><textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} /></Card>
