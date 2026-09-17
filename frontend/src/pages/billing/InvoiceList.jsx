@@ -26,6 +26,15 @@ export default function InvoiceList() {
   const { data, loading } = useFetch('/invoices', { ...query, page, limit: 25 });
   const s = data?.summary || {};
 
+  const exportCsv = async () => {
+    const all = await api.get('/invoices', { ...query, limit: 500 });
+    downloadCsv(`invoices-${from}-to-${to}.csv`, all.data, [
+      { label: 'Invoice', value: 'invoiceNo' }, { label: 'Date', value: (i) => date(i.createdAt) }, { label: 'UHID', value: (i) => i.patient?.uhid },
+      { label: 'Patient', value: (i) => fullName(i.patient) }, { label: 'Type', value: 'type' }, { label: 'Total', value: 'total' },
+      { label: 'Paid', value: 'amountPaid' }, { label: 'Balance', value: 'balance' }, { label: 'Status', value: 'status' },
+    ]);
+  };
+
   return (
     <>
       <PageHeader
@@ -33,6 +42,7 @@ export default function InvoiceList() {
         sub="Patient invoices, collections and receivables"
         actions={(
           <>
+            <Button icon={Download} onClick={exportCsv}>Export</Button>
             {can('billing', 'rw') && <Button variant="primary" icon={Plus} onClick={() => navigate('/billing/new')}>New bill</Button>}
           </>
         )}
