@@ -8,6 +8,7 @@ import DiagnosticsModule from './pages/diagnostics/index.jsx';
 import Pharmacy from './pages/Pharmacy.jsx';
 import BillingModule from './pages/billing/index.jsx';
 import Insurance from './pages/Insurance.jsx';
+import Accounting from './pages/Accounting.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
@@ -23,7 +24,7 @@ export const routes = [
   { path: '/inventory', module: 'inventory', element: <Pending title="Inventory & Purchase" /> },
   { path: '/billing/*', module: 'billing', element: <BillingModule /> },
   { path: '/insurance', module: 'insurance', element: <Insurance /> },
-  { path: '/accounting', module: 'accounting', element: <Pending title="Accounts" /> },
+  { path: '/accounting', module: 'accounting', element: <Accounting /> },
   { path: '/staff', module: 'staff', element: <Pending title="Staff & Roster" /> },
   { path: '/reports', module: 'reports', element: <Pending title="Reports & Analytics" /> },
   { path: '/communication', module: 'communication', element: <Pending title="Communication" /> },
