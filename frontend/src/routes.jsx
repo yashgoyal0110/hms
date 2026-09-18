@@ -9,6 +9,7 @@ import Pharmacy from './pages/Pharmacy.jsx';
 import BillingModule from './pages/billing/index.jsx';
 import Insurance from './pages/Insurance.jsx';
 import Accounting from './pages/Accounting.jsx';
+import Inventory from './pages/Inventory.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
@@ -21,7 +22,7 @@ export const routes = [
   { path: '/laboratory/*', module: 'lab', element: <DiagnosticsModule category="lab" /> },
   { path: '/radiology/*', module: 'radiology', element: <DiagnosticsModule category="radiology" /> },
   { path: '/pharmacy', module: 'pharmacy', element: <Pharmacy /> },
-  { path: '/inventory', module: 'inventory', element: <Pending title="Inventory & Purchase" /> },
+  { path: '/inventory', module: 'inventory', element: <Inventory /> },
   { path: '/billing/*', module: 'billing', element: <BillingModule /> },
   { path: '/insurance', module: 'insurance', element: <Insurance /> },
   { path: '/accounting', module: 'accounting', element: <Accounting /> },
