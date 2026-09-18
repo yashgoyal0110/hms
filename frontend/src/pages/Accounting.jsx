@@ -34,6 +34,13 @@ export default function Accounting() {
   const summary = useFetch(tab === 'pl' ? '/ledger/summary' : null, { from, to });
   const s = ledger.data?.summary || {};
 
+  const exportCsv = async () => {
+    const all = await api.get('/ledger', { from, to, type, category, q: dq, limit: 500 });
+    downloadCsv(`ledger-${from}-to-${to}.csv`, all.data, [
+      { label: 'Entry', value: 'entryNo' }, { label: 'Date', value: (e) => date(e.date) }, { label: 'Type', value: 'type' }, { label: 'Category', value: 'category' },
+      { label: 'Description', value: 'description' }, { label: 'Payee', value: 'payee' }, { label: 'Mode', value: 'mode' }, { label: 'Reference', value: 'reference' }, { label: 'Amount', value: 'amount' },
+    ]);
+  };
   const cats = type === 'Income' ? meta.data?.incomeCategories : type === 'Expense' ? meta.data?.expenseCategories : [...(meta.data?.incomeCategories || []), ...(meta.data?.expenseCategories || [])];
 
   return (
@@ -68,6 +75,7 @@ export default function Accounting() {
                 <Select value={type} onChange={(e) => { setType(e.target.value); setCategory(''); setPage(1); }} placeholder="Income & expense" options={['Income', 'Expense']} />
                 <Select value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} placeholder="All categories" options={cats || []} />
               </div>
+              <Button size="sm" icon={Download} onClick={exportCsv}>Export</Button>
             </div>
             <DataTable
               loading={ledger.loading}
