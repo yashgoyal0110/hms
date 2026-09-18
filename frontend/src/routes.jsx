@@ -10,6 +10,7 @@ import BillingModule from './pages/billing/index.jsx';
 import Insurance from './pages/Insurance.jsx';
 import Accounting from './pages/Accounting.jsx';
 import Inventory from './pages/Inventory.jsx';
+import OT from './pages/OT.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
@@ -18,7 +19,7 @@ export const routes = [
   { path: '/opd/*', module: 'opd', element: <OpdModule /> },
   { path: '/ipd/*', module: 'ipd', element: <IpdModule /> },
   { path: '/wards', module: 'wards', element: <Wards /> },
-  { path: '/ot', module: 'ot', element: <Pending title="Operation Theatre" /> },
+  { path: '/ot', module: 'ot', element: <OT /> },
   { path: '/laboratory/*', module: 'lab', element: <DiagnosticsModule category="lab" /> },
   { path: '/radiology/*', module: 'radiology', element: <DiagnosticsModule category="radiology" /> },
   { path: '/pharmacy', module: 'pharmacy', element: <Pharmacy /> },
