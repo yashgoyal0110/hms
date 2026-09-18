@@ -20,10 +20,11 @@ export default function Inventory() {
   return (
     <>
       <PageHeader title="Inventory & Purchase" sub="Central store, departmental issues, suppliers and purchase orders" />
-      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'items', label: 'Store items' }, { value: 'po', label: 'Purchase orders' }, { value: 'suppliers', label: 'Suppliers' }]} />
+      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'items', label: 'Store items' }, { value: 'po', label: 'Purchase orders' }, { value: 'suppliers', label: 'Suppliers' }, { value: 'moves', label: 'Stock movements' }]} />
       {tab === 'items' && <Items />}
       {tab === 'po' && <PurchaseOrders />}
       {tab === 'suppliers' && <Suppliers />}
+      {tab === 'moves' && <Movements />}
     </>
   );
 }
@@ -356,6 +357,36 @@ function Suppliers() {
           </div>
         )}
       </Modal>
+    </Card>
+  );
+}
+
+function Movements() {
+  const [itemType, setItemType] = useState('');
+  const [type, setType] = useState('');
+  const [page, setPage] = useState(1);
+  const { data, loading } = useFetch('/inventory/movements', { itemType, type, page, limit: 50 });
+  return (
+    <Card flush>
+      <div className="card-header">
+        <div className="filters">
+          <Select value={itemType} onChange={(e) => { setItemType(e.target.value); setPage(1); }} placeholder="All items" options={[{ value: 'Medicine', label: 'Medicines' }, { value: 'InventoryItem', label: 'Store items' }]} />
+          <Select value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} placeholder="All movement types" options={['IN', 'OUT', 'DISPENSE', 'ADJUST', 'EXPIRED', 'RETURN']} />
+        </div>
+      </div>
+      <DataTable
+        loading={loading}
+        rows={data?.data}
+        columns={[
+          { key: 'd', label: 'Date', render: (m) => dateTime(m.createdAt) },
+          { key: 'i', label: 'Item', render: (m) => <><div className="cell-main">{m.itemName}</div><div className="cell-sub">{m.itemType === 'Medicine' ? 'Medicine' : 'Store item'}{m.batchNo ? ` · ${m.batchNo}` : ''}</div></> },
+          { key: 't', label: 'Type', render: (m) => <Badge tone={m.quantity < 0 ? 'warning' : 'success'}>{m.type}</Badge> },
+          { key: 'q', label: 'Qty', align: 'right', render: (m) => <b className={m.quantity < 0 ? 'danger-text' : 'success-text'}>{m.quantity > 0 ? '+' : ''}{m.quantity}</b> },
+          { key: 'r', label: 'Reference / note', render: (m) => [m.reference, m.department, m.note].filter(Boolean).join(' · ') || '-' },
+          { key: 'b', label: 'By', render: (m) => m.by?.name },
+        ]}
+      />
+      <Pagination page={data?.page} pages={data?.pages} total={data?.total} onPage={setPage} />
     </Card>
   );
 }
