@@ -6,5 +6,7 @@ export default defineConfig({
   server: { proxy: { '/api': 'http://localhost:4000' } },
   build: {
     sourcemap: false,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: { output: { manualChunks: { charts: ['recharts'], vendor: ['react', 'react-dom', 'react-router-dom'] } } },
   },
 });
