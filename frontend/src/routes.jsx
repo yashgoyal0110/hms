@@ -1,4 +1,3 @@
-import Pending from './pages/Pending.jsx';
 import PatientsModule from './pages/patients/index.jsx';
 import Appointments from './pages/Appointments.jsx';
 import OpdModule from './pages/opd/index.jsx';
@@ -14,6 +13,7 @@ import OT from './pages/OT.jsx';
 import Staff from './pages/Staff.jsx';
 import Reports from './pages/Reports.jsx';
 import Communication from './pages/Communication.jsx';
+import Settings from './pages/Settings.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
@@ -33,5 +33,5 @@ export const routes = [
   { path: '/staff', module: 'staff', element: <Staff /> },
   { path: '/reports', module: 'reports', element: <Reports /> },
   { path: '/communication', module: 'communication', element: <Communication /> },
-  { path: '/settings', module: 'settings', element: <Pending title="Settings & Security" /> },
+  { path: '/settings', module: 'settings', element: <Settings /> },
 ];
