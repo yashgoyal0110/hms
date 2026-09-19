@@ -44,6 +44,7 @@ export default function Reports() {
       <PageHeader
         title="Reports & Analytics"
         sub={`Management information for ${date(from)} - ${date(to)}`}
+        actions={<Button icon={Printer} onClick={() => window.print()}>Print</Button>}
       />
       <div className="filters mb-16 no-print">
         {presets().map(([label, f, t]) => <Button key={label} size="sm" variant={from === f && to === t ? 'primary' : ''} onClick={() => setRange([f, t])}>{label}</Button>)}
