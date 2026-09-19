@@ -12,6 +12,7 @@ import Accounting from './pages/Accounting.jsx';
 import Inventory from './pages/Inventory.jsx';
 import OT from './pages/OT.jsx';
 import Staff from './pages/Staff.jsx';
+import Reports from './pages/Reports.jsx';
 
 // Module routes. Each entry is permission-guarded by its module key.
 export const routes = [
@@ -29,7 +30,7 @@ export const routes = [
   { path: '/insurance', module: 'insurance', element: <Insurance /> },
   { path: '/accounting', module: 'accounting', element: <Accounting /> },
   { path: '/staff', module: 'staff', element: <Staff /> },
-  { path: '/reports', module: 'reports', element: <Pending title="Reports & Analytics" /> },
+  { path: '/reports', module: 'reports', element: <Reports /> },
   { path: '/communication', module: 'communication', element: <Pending title="Communication" /> },
   { path: '/settings', module: 'settings', element: <Pending title="Settings & Security" /> },
 ];
