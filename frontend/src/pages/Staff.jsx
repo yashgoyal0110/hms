@@ -21,10 +21,11 @@ export default function Staff() {
   return (
     <>
       <PageHeader title="Staff & Roster" sub="Employees, departments, duty roster and access roles" />
-      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'staff', label: 'Staff directory' }, { value: 'departments', label: 'Departments' }, { value: 'roster', label: 'Duty roster' }]} />
+      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'staff', label: 'Staff directory' }, { value: 'departments', label: 'Departments' }, { value: 'roster', label: 'Duty roster' }, { value: 'roles', label: 'Roles & permissions' }]} />
       {tab === 'staff' && <StaffList />}
       {tab === 'departments' && <Departments />}
       {tab === 'roster' && <Roster />}
+      {tab === 'roles' && <Roles />}
     </>
   );
 }
@@ -249,6 +250,34 @@ function Roster() {
         </table>
       </div>
       <div className="card-body small muted">Morning 07:00-15:00 · Evening 15:00-23:00 · Night 23:00-07:00 · General 09:00-17:00</div>
+    </Card>
+  );
+}
+
+function Roles() {
+  const { data } = useFetch('/users/permissions');
+  if (!data) return null;
+  const roles = Object.keys(data.roles);
+  const label = (m) => m.charAt(0).toUpperCase() + m.slice(1).replace('opd', 'OPD').replace('ipd', 'IPD');
+  return (
+    <Card flush title="Access matrix" actions={<span className="small muted"><Check size={13} /> full access · R read only · <Minus size={13} /> no access</span>}>
+      <div className="table-wrap">
+        <table className="table">
+          <thead><tr><th>Module</th>{roles.map((r) => <th key={r} className="center">{data.roles[r]}</th>)}</tr></thead>
+          <tbody>
+            {data.modules.map((m) => (
+              <tr key={m}>
+                <td className="cell-main">{label(m).replace('Ot', 'Operation theatre')}</td>
+                {roles.map((r) => {
+                  const g = data.matrix[r]?.[m];
+                  return <td key={r} className="center">{g === 'rw' ? <Check size={15} color="var(--success)" /> : g === 'r' ? <span className="badge info plain">R</span> : <Minus size={14} color="#c0c7cf" />}</td>;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="card-body small muted">Permissions are enforced on the server for every request. Assign roles from the staff directory.</div>
     </Card>
   );
 }

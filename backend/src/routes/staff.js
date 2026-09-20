@@ -3,7 +3,7 @@ import { can } from '../middleware/auth.js';
 import {
   Department, Shift, User, nextCode, validatePasswordStrength,
 } from '../models/index.js';
-import { ROLES } from '../permissions.js';
+import { MATRIX, MODULES, ROLES } from '../permissions.js';
 import { crudRouter } from '../utils/crud.js';
 import { badRequest, clean, notFound } from '../utils/http.js';
 import { paginate, searchFilter } from '../utils/query.js';
@@ -16,6 +16,7 @@ export const departmentsRouter = crudRouter(Department, {
 export const usersRouter = Router();
 
 usersRouter.get('/roles', (_req, res) => res.json(ROLES));
+usersRouter.get('/permissions', can('staff', 'r'), (_req, res) => res.json({ roles: ROLES, modules: MODULES, matrix: MATRIX }));
 
 // Lightweight directory (doctors, nurses...) available to all authenticated users for pickers.
 usersRouter.get('/directory', async (req, res) => {
