@@ -1,0 +1,106 @@
+# Hospital Management System - production stack.
+# Everything is namespaced with "hms-" so it can live alongside other apps on the same host.
+name: hms-yashgoyal
+
+services:
+  hms-mongo:
+    image: mongo:7
+    container_name: hms-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      TZ: ${TZ:-Asia/Kolkata}
+    command: ["--wiredTigerCacheSizeGB", "0.5"]
+    volumes:
+      - hms_mongo_data:/data/db
+    networks: [hms-net]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  hms-api:
+    build: ./backend
+    image: hms-yashgoyal/api:latest
+    container_name: hms-api
+    restart: unless-stopped
+    depends_on:
+      hms-mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      TZ: ${TZ:-Asia/Kolkata}
+      MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@hms-mongo:27017/${MONGO_DB:-hms}?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      DEMO_MODE: ${DEMO_MODE:-false}
+      BACKUP_DIR: /backups
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMS_WEBHOOK_URL: ${SMS_WEBHOOK_URL:-}
+      SMS_WEBHOOK_TOKEN: ${SMS_WEBHOOK_TOKEN:-}
+      SMS_SENDER_ID: ${SMS_SENDER_ID:-HOSPTL}
+    volumes:
+      - hms_backups:/backups
+    networks: [hms-net]
+
+  hms-web:
+    build: ./frontend
+    image: hms-yashgoyal/web:latest
+    container_name: hms-web
+    restart: unless-stopped
+    depends_on: [hms-api]
+    networks: [hms-net]
+
+  hms-caddy:
+    image: caddy:2-alpine
+    container_name: hms-caddy
+    restart: unless-stopped
+    depends_on: [hms-web]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - hms_caddy_data:/data
+    networks: [hms-net]
+
+  hms-backup:
+    image: mongo:7
+    container_name: hms-backup
+    restart: unless-stopped
+    depends_on:
+      hms-mongo:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    environment:
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DB: ${MONGO_DB:-hms}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      TZ: ${TZ:-Asia/Kolkata}
+    volumes:
+      - hms_backups:/backups
+      - ./backup/backup.sh:/backup.sh:ro
+    networks: [hms-net]
+
+volumes:
+  hms_caddy_data:
+  hms_mongo_data:
+  hms_backups:
+
+networks:
+  hms-net:
+    name: hms-yashgoyal-net
