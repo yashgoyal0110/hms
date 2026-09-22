@@ -11,7 +11,7 @@ cd "$(dirname "$0")"
 
 tar --no-xattrs -czf - \
   --exclude='./.git' --exclude='*/node_modules' --exclude='./frontend/dist' --exclude='./.env' \
-  --exclude='.DS_Store' . \
+  --exclude='./astral-hold-*.json' --exclude='*.pem' --exclude='.DS_Store' . \
 | gcloud compute ssh "${USER_NAME}@${INSTANCE}" --zone "$ZONE" --quiet --command "
   set -e
   mkdir -p ${REMOTE_DIR} && cd ${REMOTE_DIR}
