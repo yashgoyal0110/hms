@@ -1,4 +1,0 @@
-hms.yashgoyal.sbs {
-	encode gzip
-	reverse_proxy hms-web:80
-}

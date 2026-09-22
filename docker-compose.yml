@@ -61,19 +61,8 @@ services:
     container_name: hms-web
     restart: unless-stopped
     depends_on: [hms-api]
-    networks: [hms-net]
-
-  hms-caddy:
-    image: caddy:2-alpine
-    container_name: hms-caddy
-    restart: unless-stopped
-    depends_on: [hms-web]
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - hms_caddy_data:/data
+      - "127.0.0.1:${WEB_PORT:-8095}:80"
     networks: [hms-net]
 
   hms-backup:
@@ -97,7 +86,6 @@ services:
     networks: [hms-net]
 
 volumes:
-  hms_caddy_data:
   hms_mongo_data:
   hms_backups:
 
