@@ -335,6 +335,8 @@ export async function seedDemoData() {
 
   /* ---------- Patients ---------- */
   const patients = [];
+  // Mongoose treats createdAt as immutable, so registration dates are tracked separately.
+  const regDate = new Map();
   for (let i = 0; i < 90; i += 1) {
     const female = chance(0.48);
     const age = pick([int(1, 12), int(18, 35), int(25, 50), int(36, 65), int(45, 80)]);
@@ -362,7 +364,7 @@ export async function seedDemoData() {
       registeredBy: reception._id,
     });
     await backdate(Patient, p._id, createdAt);
-    p.createdAt = createdAt;
+    regDate.set(String(p._id), createdAt);
     patients.push(p);
   }
 
@@ -460,7 +462,7 @@ export async function seedDemoData() {
     const used = new Set();
     for (let k = 0; k < perDay; k += 1) {
       const doc = pick(clinicDocs);
-      const pool = patients.filter((p) => p.createdAt <= new Date(date.getTime() + DAY));
+      const pool = patients.filter((p) => regDate.get(String(p._id)) <= new Date(date.getTime() + DAY));
       if (!pool.length) continue;
       const patient = pick(pool);
       const hour = int(9, 16); const minute = pick([0, 15, 30, 45]);
