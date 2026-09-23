@@ -6,6 +6,8 @@ INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-24}
 RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-14}
 URI="mongodb://${MONGO_USER}:${MONGO_PASSWORD}@hms-mongo:27017/${MONGO_DB}?authSource=admin"
 mkdir -p "$DIR"
+# The API container runs as the unprivileged "node" user (uid 1000) and needs to drop trigger files here.
+chown 1000:1000 "$DIR" && chmod 0775 "$DIR"
 
 run_backup() {
   name="hms-$(date +%Y%m%d-%H%M%S).archive.gz"
