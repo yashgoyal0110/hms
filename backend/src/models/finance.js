@@ -103,7 +103,7 @@ export const InsuranceClaim = model('InsuranceClaim', claimSchema);
 export const INCOME_CATEGORIES = ['OPD', 'IPD', 'Pharmacy', 'Laboratory', 'Radiology', 'OT', 'General', 'Other Income'];
 export const EXPENSE_CATEGORIES = [
   'Salaries', 'Medical Supplies', 'Pharmacy Purchases', 'Utilities', 'Rent', 'Maintenance',
-  'Equipment', 'Housekeeping', 'Marketing', 'Insurance', 'Taxes', 'Professional Fees', 'Miscellaneous',
+  'Equipment', 'Housekeeping', 'Marketing', 'Insurance', 'Taxes', 'Professional Fees', 'Patient Refunds', 'Miscellaneous',
 ];
 
 const ledgerSchema = new Schema({

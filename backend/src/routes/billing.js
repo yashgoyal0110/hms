@@ -3,7 +3,7 @@ import { can } from '../middleware/auth.js';
 import {
   Admission, CHARGE_CATEGORIES, INCOME_CATEGORIES, EXPENSE_CATEGORIES, InsuranceClaim, Invoice, LedgerEntry, PAYMENT_MODES, Patient, nextCode,
 } from '../models/index.js';
-import { addCharges, recordPayment } from '../services/billing.js';
+import { addCharges, recordPayment, refundInvoice } from '../services/billing.js';
 import { notifyPatient } from '../services/messaging.js';
 import { badRequest, clean, notFound } from '../utils/http.js';
 import { dateRange, paginate, searchFilter } from '../utils/query.js';
@@ -123,6 +123,15 @@ invoicesRouter.post('/:id/payments', can('billing', 'rw'), async (req, res) => {
   if (!PAYMENT_MODES.includes(mode)) throw badRequest('Select a payment mode');
   const receiptNo = await recordPayment(inv, { amount, mode, reference }, req.user);
   notifyPatient('payment_received', inv.patient, { amount: Number(amount).toFixed(2), invoiceNo: inv.invoiceNo, receiptNo });
+  res.json({ invoice: inv, receiptNo });
+});
+
+invoicesRouter.post('/:id/refund', can('billing', 'rw'), async (req, res) => {
+  const inv = await Invoice.findById(req.params.id);
+  if (!inv) throw notFound('Invoice');
+  const { amount, mode = 'Cash', reference } = req.body;
+  if (!PAYMENT_MODES.includes(mode)) throw badRequest('Select a refund mode');
+  const receiptNo = await refundInvoice(inv, { amount, mode, reference }, req.user);
   res.json({ invoice: inv, receiptNo });
 });
 

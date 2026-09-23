@@ -88,3 +88,20 @@ export async function removeCharges(invoiceId, refId) {
   inv.recalc();
   await inv.save();
 }
+
+// Refund money collected in excess of the bill (e.g. an unused admission deposit).
+export async function refundInvoice(invoice, { amount, mode, reference }, user) {
+  const amt = Math.round(Number(amount) * 100) / 100;
+  if (!amt || amt <= 0) throw badRequest('Refund amount must be greater than zero');
+  if (!invoice.finalized) throw badRequest('Refunds can only be made after the bill is finalized');
+  if (amt > -invoice.balance + 0.001) throw badRequest('Refund cannot exceed the excess amount collected');
+  const receiptNo = await nextCode('RFD');
+  invoice.payments.push({ receiptNo, amount: -amt, mode, reference: reference || 'Refund', paidAt: new Date(), receivedBy: user?._id });
+  invoice.recalc();
+  await invoice.save();
+  await LedgerEntry.create({
+    entryNo: await nextCode('LED'), type: 'Expense', category: 'Patient Refunds', amount: amt, mode,
+    description: `Refund ${receiptNo} against ${invoice.invoiceNo}`, reference: receiptNo, invoice: invoice._id, auto: true, createdBy: user?._id,
+  });
+  return receiptNo;
+}
