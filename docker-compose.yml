@@ -42,6 +42,7 @@ services:
       SEED_DEMO: ${SEED_DEMO:-false}
       DEMO_MODE: ${DEMO_MODE:-false}
       BACKUP_DIR: /backups
+      TRUST_PROXY: 2
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_SECURE: ${SMTP_SECURE:-false}
