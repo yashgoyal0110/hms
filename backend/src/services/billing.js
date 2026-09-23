@@ -74,3 +74,17 @@ export function daysBetween(from, to) {
   const b = new Date(to); b.setHours(0, 0, 0, 0);
   return Math.max(1, Math.round((b - a) / 86400000));
 }
+
+// Remove unpaid charge lines linked to a cancelled source document.
+export async function removeCharges(invoiceId, refId) {
+  if (!invoiceId) return;
+  const inv = await Invoice.findById(invoiceId);
+  if (!inv || inv.status === 'Cancelled') return;
+  inv.items = inv.items.filter((i) => String(i.refId) !== String(refId));
+  if (!inv.items.length && !inv.payments.length && inv.finalized) {
+    inv.status = 'Cancelled';
+    inv.cancelReason = 'Source order cancelled';
+  }
+  inv.recalc();
+  await inv.save();
+}

@@ -3,7 +3,7 @@ import { hasPermission } from '../permissions.js';
 import {
   Encounter, LabOrder, LabTest, Patient, nextCode,
 } from '../models/index.js';
-import { addCharges } from '../services/billing.js';
+import { addCharges, removeCharges } from '../services/billing.js';
 import { notifyPatient } from '../services/messaging.js';
 import { notifyStaff } from '../services/notify.js';
 import {
@@ -195,6 +195,7 @@ ordersRouter.post('/:id/cancel', async (req, res) => {
   order.status = 'Cancelled';
   order.reportRemarks = req.body.reason || order.reportRemarks;
   await order.save();
+  await removeCharges(order.invoice, order._id);
   res.json(order);
 });
 
