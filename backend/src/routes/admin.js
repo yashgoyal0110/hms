@@ -42,7 +42,9 @@ backupRouter.get('/', can('backup', 'r'), async (_req, res) => {
     files.sort((a, b) => b.createdAt - a.createdAt);
   } catch { /* backup volume unavailable */ }
   try { status = JSON.parse(await fs.readFile(path.join(config.backupDir, '.status.json'), 'utf8')); } catch { /* none yet */ }
-  res.json({ files, status });
+  let pending = false;
+  try { await fs.access(path.join(config.backupDir, '.trigger')); pending = true; } catch { /* no trigger */ }
+  res.json({ files, status, pending });
 });
 
 backupRouter.post('/', can('backup', 'rw'), async (req, res) => {
