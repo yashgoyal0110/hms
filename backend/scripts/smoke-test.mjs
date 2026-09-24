@@ -40,6 +40,11 @@ for (const [c, e] of [[admin, 'admin'], [doc, 'dr.mehta'], [nurse, 'nurse.priya'
 const bad = await client().login('admin@demo.hms'.replace('admin', 'nobody'));
 check('invalid login rejected', bad.status === 401);
 check('unauthenticated request rejected', (await client().get('/patients')).status === 401);
+check('pharmacist cannot create invoice', (await pharm.post('/invoices', {})).status === 403);
+check('lab tech cannot register patient', (await lab.post('/patients', { firstName: 'X' })).status === 403);
+check('radiologist cannot read lab orders', (await rad.get('/lab-orders?category=lab')).status === 403);
+check('nurse cannot read billing', (await nurse.get('/invoices')).status === 403);
+check('accountant cannot access audit', (await acc.get('/audit')).status === 403);
 
 console.log('Registration & appointments');
 const pr = await rec.post('/patients', { firstName: 'Smoke', lastName: `Test${Date.now() % 10000}`, gender: 'Male', phone: '9000000001', dob: '1985-05-05', allergies: ['Penicillin'], chargeRegistration: true, insurance: { provider: 'Star Health', policyNumber: 'POLTEST1', tpa: 'Medi Assist' } });
