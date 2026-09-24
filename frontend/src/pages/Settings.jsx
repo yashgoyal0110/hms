@@ -24,11 +24,13 @@ export default function Settings() {
           { value: 'hospital', label: 'Hospital profile' },
           ...(can('backup') ? [{ value: 'backup', label: 'Backups' }] : []),
           ...(can('audit') ? [{ value: 'audit', label: 'Audit trail' }] : []),
+          { value: 'security', label: 'Security' },
         ]}
       />
       {tab === 'hospital' && <Hospital />}
       {tab === 'backup' && <Backups />}
       {tab === 'audit' && <Audit />}
+      {tab === 'security' && <Security />}
     </>
   );
 }
@@ -155,5 +157,36 @@ function Audit() {
       />
       <Pagination page={data?.page} pages={data?.pages} total={data?.total} onPage={setPage} />
     </Card>
+  );
+}
+
+function Security() {
+  return (
+    <div className="grid grid-2">
+      <Card title={<h3 className="row"><ShieldCheck size={16} />Security controls in place</h3>}>
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.9 }}>
+          <li>Role-based access control enforced on every API request</li>
+          <li>Passwords hashed with bcrypt (cost 12); strength policy enforced</li>
+          <li>Account lock for 15 minutes after 5 failed sign-in attempts</li>
+          <li>Sessions in HttpOnly, Secure, SameSite=Strict cookies; 12-hour expiry</li>
+          <li>Sessions invalidated automatically after a password change</li>
+          <li>Rate limiting on sign-in and API endpoints</li>
+          <li>Input sanitisation against NoSQL injection; security headers (Helmet)</li>
+          <li>TLS (HTTPS) for all traffic; database not exposed to the internet</li>
+          <li>Complete audit trail of sign-ins and every data change (retained 2 years)</li>
+          <li>Automated daily database backups with 14-day retention</li>
+        </ul>
+      </Card>
+      <Card title="Recommended operating practices">
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.9 }}>
+          <li>Change the default administrator password after first sign-in</li>
+          <li>Deactivate accounts of staff who leave the organisation immediately</li>
+          <li>Give each staff member the least-privileged role needed</li>
+          <li>Download a backup weekly and store it off-site</li>
+          <li>Review failed sign-ins in the audit trail regularly</li>
+          <li>Disable demo mode (DEMO_MODE=false) before going live with real patient data</li>
+        </ul>
+      </Card>
+    </div>
   );
 }
