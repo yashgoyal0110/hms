@@ -68,7 +68,7 @@ export default function InvoiceDetail() {
             {w && !inv.finalized && !inv.admission && <Button icon={Lock} onClick={async () => { try { await api.post(`/invoices/${id}/finalize`); reload(); } catch (e) { toast.error(e); } }}>Finalise</Button>}
             {can('insurance', 'rw') && inv.finalized && inv.balance > 0 && !cancelled && <Button icon={ShieldCheck} onClick={() => navigate(`/insurance?new=1&invoice=${id}`)}>Insurance claim</Button>}
             {w && !cancelled && !inv.payments.length && <Button icon={Ban} variant="danger" onClick={() => setModal('cancel')}>Cancel</Button>}
-            {w && inv.balance < 0 && <Button icon={Undo2} onClick={() => setModal('refund')}>Refund {money(-inv.balance)}</Button>}
+            {w && inv.finalized && inv.balance < 0 && <Button icon={Undo2} onClick={() => setModal('refund')}>Refund {money(-inv.balance)}</Button>}
             <Button icon={Printer} onClick={() => setModal('print')}>Print</Button>
             {w && !cancelled && inv.balance > 0 && <Button variant="primary" icon={IndianRupee} onClick={() => setModal('pay')}>Collect payment</Button>}
           </>
@@ -129,7 +129,7 @@ export default function InvoiceDetail() {
               ['Status', <StatusBadge status={statusLabel} />], ['Subtotal', money(inv.subtotal)], ['GST', money(inv.taxTotal)],
               ['Discount', inv.discount ? `${money(inv.discount)}${inv.discountReason ? ` (${inv.discountReason})` : ''}` : '-'],
               ['Total', <b>{money(inv.total)}</b>], ['Paid', money(inv.amountPaid)],
-              ['Balance', <b className={inv.balance > 0 ? 'danger-text' : inv.balance < 0 ? 'warning-text' : 'success-text'}>{inv.balance < 0 ? `${money(-inv.balance)} refundable` : money(inv.balance)}</b>],
+              ['Balance', <b className={inv.balance > 0 ? 'danger-text' : inv.balance < 0 ? 'warning-text' : 'success-text'}>{inv.balance < 0 ? `${money(-inv.balance)} ${inv.finalized ? 'refundable' : 'advance available'}` : money(inv.balance)}</b>],
             ]}
             />
           </Card>
@@ -164,7 +164,7 @@ function InvoicePrint({ inv }) {
         <div><span>Patient</span><b>{fullName(p)}</b></div><div><span>UHID</span>{p.uhid}</div>
         <div><span>Age / Sex</span>{ageSex(p)}</div><div><span>Phone</span>{p.phone}</div>
         {inv.admission && <><div><span>IPD No.</span>{inv.admission.admissionNo}</div><div><span>Consultant</span>{inv.admission.doctor?.name}</div><div><span>Admitted</span>{dateTime(inv.admission.admittedAt)}</div><div><span>Discharged</span>{dateTime(inv.admission.dischargedAt)}</div></>}
-        <div><span>Bill type</span>{inv.type}</div><div><span>Status</span>{inv.status}</div>
+        <div><span>Bill type</span>{inv.type}</div><div><span>Status</span>{inv.finalized ? inv.status : 'Open (interim)'}</div>
       </div>
       <table>
         <thead><tr><th>#</th><th>Description</th><th>Category</th><th style={{ textAlign: 'right' }}>Qty</th><th style={{ textAlign: 'right' }}>Rate</th><th style={{ textAlign: 'right' }}>GST</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead>
@@ -179,7 +179,7 @@ function InvoicePrint({ inv }) {
           {inv.discount > 0 && <tr><td>Discount</td><td style={{ textAlign: 'right' }}>- {money(inv.discount)}</td></tr>}
           <tr><th>Net amount</th><th style={{ textAlign: 'right' }}>{money(inv.total)}</th></tr>
           <tr><td>Amount received</td><td style={{ textAlign: 'right' }}>{money(inv.amountPaid)}</td></tr>
-          <tr><th>{inv.balance < 0 ? 'Refundable' : 'Balance due'}</th><th style={{ textAlign: 'right' }}>{money(Math.abs(inv.balance))}</th></tr>
+          <tr><th>{inv.balance < 0 ? (inv.finalized ? 'Refundable' : 'Advance balance') : 'Balance due'}</th><th style={{ textAlign: 'right' }}>{money(Math.abs(inv.balance))}</th></tr>
         </tbody>
       </table>
       <p><b>Amount in words:</b> Rupees {amountInWords(inv.total)} only</p>
