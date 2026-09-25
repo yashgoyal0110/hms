@@ -50,7 +50,10 @@ invoicesRouter.post('/', can('billing', 'rw'), async (req, res) => {
   inv.notes = notes;
   inv.recalc();
   await inv.save();
-  if (payment?.mode && Number(payment.amount) > 0) await recordPayment(inv, payment, req.user);
+  if (payment?.mode && inv.balance > 0) {
+    const amount = Math.min(Number(payment.amount) || inv.balance, inv.balance);
+    await recordPayment(inv, { ...payment, amount }, req.user);
+  }
   res.status(201).json(inv);
 });
 
