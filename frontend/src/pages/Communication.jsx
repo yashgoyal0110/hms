@@ -50,6 +50,13 @@ function Compose({ onSent }) {
     const t = templates.data?.find((x) => x.key === key);
     if (t) { setChannel(t.channel); setSubject(t.subject || ''); setBody(t.body); }
   };
+  const addTomorrow = async () => {
+    const r = await api.get('/appointments', { date: isoDate(addDays(new Date(), 1)), status: 'Scheduled', limit: 500 });
+    const list = r.data.map((a) => a.patient).filter(Boolean);
+    setRecipients((cur) => [...cur, ...list.filter((p) => !cur.some((c) => c._id === p._id))]);
+    applyTemplate('appointment_reminder');
+    toast.info(`${list.length} patients with appointments tomorrow added`);
+  };
   const send = async () => {
     setBusy(true);
     try {
@@ -84,6 +91,7 @@ function Compose({ onSent }) {
       <Card title={`Recipients (${recipients.length})`} actions={recipients.length > 0 && <Button size="sm" onClick={() => setRecipients([])}>Clear</Button>}>
         <div className="stack">
           <PatientPicker value={null} onChange={(p) => p && setRecipients((cur) => (cur.some((c) => c._id === p._id) ? cur : [...cur, p]))} placeholder="Add patient" />
+          <Button size="sm" icon={CalendarClock} onClick={addTomorrow}>Add tomorrow’s appointments</Button>
           <div style={{ maxHeight: 360, overflowY: 'auto' }}>
             {recipients.map((p) => (
               <div key={p._id} className="row between" style={{ padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
