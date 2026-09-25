@@ -8,7 +8,7 @@ import { useAuth } from '../lib/auth.jsx';
 import { useDebounced, useFetch } from '../lib/hooks.js';
 import { useToast } from '../lib/toast.jsx';
 import {
-  ageSex, date, dateTime, fullName, isoDate, money,
+  ageSex, date, dateTime, fullName, isoDate, medLabel, money,
 } from '../lib/format.js';
 import {
   Badge, Button, Card, DataTable, ErrorBox, Field, KV, Modal, PageHeader, Pagination, Select, Stat, StatusBadge, Tabs,
@@ -72,14 +72,14 @@ function Dispense({ rx, clearRx, onDone }) {
     if (!rx) return;
     setPatient(rx.patient);
     setLines(rx.prescriptions.filter((m) => m.medicine?._id).map((m) => ({
-      medicine: m.medicine._id, name: `${m.medicine.name} ${m.medicine.strength || ''}`.trim(), mrp: m.medicine.mrp, stock: m.medicine.stock, quantity: guessQty(m), note: `${m.dosage || ''} ${m.frequency || ''} × ${m.duration || ''}`,
+      medicine: m.medicine._id, name: medLabel(m.medicine), mrp: m.medicine.mrp, stock: m.medicine.stock, quantity: guessQty(m), note: `${m.dosage || ''} ${m.frequency || ''} × ${m.duration || ''}`,
     })));
   }, [rx]);
 
   const add = (m) => {
     if (!m._id) return;
     if (lines.some((l) => l.medicine === m._id)) { toast.info(`${m.name} is already in the list`); return; }
-    setLines([...lines, { medicine: m._id, name: `${m.name} ${m.strength || ''}`.trim(), mrp: m.mrp, stock: m.stock, quantity: 1 }]);
+    setLines([...lines, { medicine: m._id, name: medLabel(m), mrp: m.mrp, stock: m.stock, quantity: 1 }]);
   };
   const subtotal = lines.reduce((s, l) => s + l.mrp * (Number(l.quantity) || 0), 0);
   const net = Math.max(0, subtotal - (Number(discount) || 0));

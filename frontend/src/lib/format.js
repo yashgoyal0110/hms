@@ -53,6 +53,7 @@ export function ageOf(dob) {
   const months = Math.floor(ms / (30.44 * 86400000));
   return months >= 1 ? `${months}m` : `${Math.floor(ms / 86400000)}d`;
 }
+export const medLabel = (m) => (m?.strength && !m.name.includes(m.strength.split(' ')[0]) ? `${m.name} ${m.strength}` : m?.name || '');
 export const fullName = (p) => (p ? [p.firstName, p.lastName].filter(Boolean).join(' ') : '-');
 export const ageSex = (p) => (p ? [ageOf(p.dob), p.gender?.[0]].filter(Boolean).join(' / ') : '');
 export const initials = (name = '') => name.replace(/^Dr\.?\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]).join('').toUpperCase();

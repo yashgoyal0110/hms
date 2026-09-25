@@ -139,7 +139,7 @@ r.post('/dispense', can('pharmacy', 'rw'), async (req, res) => {
   for (const { med, batch, take } of plan) {
     batch.quantity -= take;
     invoiceItems.push({
-      description: `${med.name}${med.strength ? ` ${med.strength}` : ''} - Batch ${batch.batchNo}`,
+      description: `${med.strength && !med.name.includes(med.strength.split(' ')[0]) ? `${med.name} ${med.strength}` : med.name} - Batch ${batch.batchNo}`,
       category: 'Pharmacy', quantity: take, rate: batch.mrp || med.mrp, taxRate: 0, refType: 'Medicine', refId: med._id,
     });
   }
