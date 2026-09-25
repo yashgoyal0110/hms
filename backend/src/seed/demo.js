@@ -707,12 +707,12 @@ export async function seedDemoData() {
     const base = new Date(); base.setMonth(base.getMonth() - m, 1); base.setHours(11, 0, 0, 0);
     if (base > new Date()) continue;
     const entries = [
-      ['Salaries', 1850000, 'Bank Transfer', 'Monthly payroll'], ['Utilities', int(140000, 190000), 'Bank Transfer', 'Electricity - JVVNL'], ['Utilities', int(18000, 26000), 'Bank Transfer', 'Water & sewerage'],
-      ['Rent', 350000, 'Bank Transfer', 'Building lease - Block C'], ['Maintenance', int(40000, 90000), 'Bank Transfer', 'Biomedical equipment AMC'], ['Housekeeping', int(60000, 80000), 'Bank Transfer', 'Outsourced housekeeping'],
-      ['Marketing', int(25000, 60000), 'UPI', 'Health camp & print ads'], ['Medical Supplies', int(120000, 220000), 'Bank Transfer', 'Surgical consumables'], ['Professional Fees', int(90000, 150000), 'Bank Transfer', 'Visiting consultants'],
+      ['Salaries', 420000, 'Bank Transfer', 'Monthly payroll'], ['Utilities', int(38000, 52000), 'Bank Transfer', 'Electricity - JVVNL'], ['Utilities', int(6000, 9000), 'Bank Transfer', 'Water & sewerage'],
+      ['Rent', 120000, 'Bank Transfer', 'Building lease - Block C'], ['Maintenance', int(15000, 30000), 'Bank Transfer', 'Biomedical equipment AMC'], ['Housekeeping', int(25000, 32000), 'Bank Transfer', 'Outsourced housekeeping'],
+      ['Marketing', int(10000, 20000), 'UPI', 'Health camp & print ads'], ['Medical Supplies', int(40000, 70000), 'Bank Transfer', 'Surgical consumables'], ['Professional Fees', int(30000, 50000), 'Bank Transfer', 'Visiting consultants'],
     ];
     for (const [category, amount, mode, description] of entries) {
-      const date = new Date(base.getTime() + int(0, 20) * DAY);
+      const date = category === 'Salaries' ? new Date(base) : new Date(base.getTime() + int(0, 20) * DAY);
       if (date > new Date()) continue;
       await LedgerEntry.create({ entryNo: await nextCode('LED'), date, type: 'Expense', category, amount, mode, description, payee: description.split(' - ')[1]?.trim(), createdBy: accountant._id });
     }
