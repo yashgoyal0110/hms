@@ -70,6 +70,18 @@ r.post('/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// Session probe used by the web app on load: 200 with user=null when signed out (avoids console noise).
+r.get('/session', async (req, res, next) => {
+  if (!req.cookies?.[COOKIE_NAME]) return res.json({ user: null });
+  try {
+    await authenticate(req, res, () => {});
+    return res.json(sessionPayload(req.user));
+  } catch {
+    res.clearCookie(COOKIE_NAME, { path: '/' });
+    return res.json({ user: null });
+  }
+});
+
 r.get('/me', authenticate, (req, res) => {
   res.json(sessionPayload(req.user));
 });

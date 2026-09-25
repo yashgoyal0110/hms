@@ -19,8 +19,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     setUnauthorizedHandler(() => setSession(null));
-    api.get('/auth/me')
-      .then(async (s) => { setSession(s); await loadSettings(); })
+    api.get('/auth/session')
+      .then(async (s) => { if (s?.user) { setSession(s); await loadSettings(); } else setSession(null); })
       .catch(() => setSession(null))
       .finally(() => setReady(true));
   }, [loadSettings]);
