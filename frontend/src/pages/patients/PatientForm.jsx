@@ -7,7 +7,9 @@ import { useToast } from '../../lib/toast.jsx';
 import {
   Button, Card, ErrorBox, Field, Loading, PageHeader, Select,
 } from '../../components/ui.jsx';
+import { Wand2 } from 'lucide-react';
 import { TagInput } from '../../components/pickers.jsx';
+import { demoPatient } from '../../lib/demoPatient.js';
 
 const EMPTY = {
   title: '', firstName: '', lastName: '', gender: '', dob: '', bloodGroup: 'Unknown', maritalStatus: '', phone: '', altPhone: '', email: '', occupation: '',
@@ -26,6 +28,19 @@ export default function PatientForm() {
   const [busy, setBusy] = useState(false);
   const [dup, setDup] = useState(null);
   const [ageInput, setAgeInput] = useState('');
+  const [demoMode, setDemoMode] = useState(false);
+
+  useEffect(() => {
+    if (!id) api.get('/public/info').then((i) => setDemoMode(Boolean(i.demoMode))).catch(() => {});
+  }, [id]);
+
+  const fillDemo = () => {
+    setValues(demoPatient());
+    setAgeInput('');
+    setDup(null);
+    setError(null);
+  };
+
   useEffect(() => {
     if (!id) return;
     api.get(`/patients/${id}`).then(({ patient: p }) => {
@@ -75,6 +90,7 @@ export default function PatientForm() {
         crumbs={<><Link to="/patients">Patients</Link> / {id ? 'Edit' : 'New registration'}</>}
         title={id ? `Edit patient - ${values.uhid || ''}` : 'Register new patient'}
         sub={id ? undefined : 'A unique health ID (UHID) is generated automatically on save.'}
+        actions={!id && demoMode && <Button icon={Wand2} onClick={fillDemo}>Fill demo patient</Button>}
       />
       <form onSubmit={submit}>
         <div className="stack">
