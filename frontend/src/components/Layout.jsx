@@ -10,6 +10,7 @@ import { ago, initials } from '../lib/format.js';
 import { useDebounced } from '../lib/hooks.js';
 import { Dropdown } from './ui.jsx';
 import ChangePasswordModal from './ChangePasswordModal.jsx';
+import ErrorBoundary from './ErrorBoundary.jsx';
 import { LogoMark, PRODUCT } from './Brand.jsx';
 
 export const NAV = [
@@ -202,7 +203,7 @@ export default function Layout() {
           </Dropdown>
         </header>
         <main className="content">
-          <Outlet />
+          <ErrorBoundary resetKey={location.pathname}><Outlet /></ErrorBoundary>
         </main>
       </div>
       <ChangePasswordModal open={pwOpen} onClose={() => setPwOpen(false)} />
