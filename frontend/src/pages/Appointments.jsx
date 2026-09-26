@@ -28,8 +28,13 @@ export default function Appointments() {
   const [booking, setBooking] = useState(params.get('book') === '1');
   const [cancel, setCancel] = useState(null);
   const [reschedule, setReschedule] = useState(null);
-  const { data, loading, reload } = useFetch('/appointments', { date: day, doctor, department, status, limit: 300 });
+  const { data, loading, reload: reloadDay } = useFetch('/appointments', { date: day, doctor, department, status, limit: 300 });
   const rows = data?.data || [];
+  const upcoming = useFetch(view === 'upcoming' ? '/appointments' : null, {
+    from: isoDate(addDays(new Date(), 1)), to: isoDate(addDays(new Date(), 30)), doctor, department, status: status || 'Scheduled', sort: 'date', limit: 500,
+  });
+  const upcomingRows = [...(upcoming.data?.data || [])].sort((a, b) => new Date(a.date) - new Date(b.date) || a.timeSlot.localeCompare(b.timeSlot));
+  const reload = () => { reloadDay(); upcoming.reload(); };
 
   useEffect(() => {
     if (params.get('book') === '1') setBooking(true);
@@ -100,13 +105,38 @@ export default function Appointments() {
             tabs={[
               { value: 'list', label: 'Appointment list', count: rows.length },
               { value: 'queue', label: 'Doctor-wise queue' },
+              { value: 'upcoming', label: 'Upcoming (30 days)', count: upcoming.data ? upcoming.data.total : undefined },
             ]}
           />
-          <div className="row small muted" style={{ marginTop: -6, marginBottom: 10, gap: 14 }}>
+          {view !== 'upcoming' && <div className="row small muted" style={{ marginTop: -6, marginBottom: 10, gap: 14 }}>
             {['Scheduled', 'Checked-in', 'In-consultation', 'Completed', 'Cancelled', 'No-show'].map((s) => <span key={s}>{s}: <b className="mono">{counts[s] || 0}</b></span>)}
-          </div>
+          </div>}
         </div>
-        {view === 'list' ? (
+        {view === 'upcoming' && (
+          <DataTable
+            loading={upcoming.loading}
+            rows={upcomingRows}
+            empty="No upcoming appointments in the next 30 days"
+            columns={[
+              { key: 'date', label: 'Date', render: (a) => <><b>{date(a.date)}</b><div className="cell-sub">{new Date(a.date).toLocaleDateString('en-IN', { weekday: 'long' })}</div></> },
+              { key: 'slot', label: 'Slot', render: (a) => <span className="mono strong">{slot12(a.timeSlot)}</span> },
+              { key: 'p', label: 'Patient', render: (a) => <><Link to={`/patients/${a.patient?._id}`} className="cell-main">{fullName(a.patient)}</Link><div className="cell-sub">{a.patient?.uhid} · {a.patient?.phone}</div></> },
+              { key: 'd', label: 'Doctor', render: (a) => <>{a.doctor?.name}<div className="cell-sub">{a.department?.name}</div></> },
+              { key: 't', label: 'Visit', render: (a) => <>{a.type}<div className="cell-sub">{a.source}</div></> },
+              { key: 's', label: 'Status', render: (a) => <StatusBadge status={a.status} /> },
+              {
+                key: 'x', label: '', className: 'actions-cell',
+                render: (a) => canWrite && a.status === 'Scheduled' && (
+                  <div className="row" style={{ justifyContent: 'flex-end' }}>
+                    <Button size="sm" onClick={() => setReschedule(a)}>Reschedule</Button>
+                    <Button size="sm" variant="danger" onClick={() => setCancel(a)}>Cancel</Button>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        )}
+        {view === 'upcoming' ? null : view === 'list' ? (
           <DataTable
             loading={loading}
             rows={rows}
@@ -174,7 +204,7 @@ export default function Appointments() {
         open={booking}
         presetPatientId={params.get('patient')}
         onClose={() => { setBooking(false); if (params.get('book')) { params.delete('book'); params.delete('patient'); setParams(params, { replace: true }); } }}
-        onBooked={(a) => { setDay(isoDate(a.date)); reload(); }}
+        onBooked={(a) => { setDay(isoDate(a.date)); if (view === 'upcoming' && isoDate(a.date) === isoDate()) setView('list'); reload(); }}
       />
       <Reschedule appt={reschedule} onClose={() => setReschedule(null)} onDone={reload} />
       <CancelDialog appt={cancel} onClose={() => setCancel(null)} onDone={reload} />
@@ -247,7 +277,14 @@ export function BookAppointment({ open, onClose, onBooked, presetPatientId }) {
         <div className="form-grid">
           <Field label="Department"><DepartmentSelect value={department} onChange={(v) => { setDepartment(v); setDoctor(''); }} type="Clinical" includeAll /></Field>
           <Field label="Doctor" required><StaffSelect role="doctor" value={doctor} onChange={setDoctor} department={department || undefined} placeholder="Select doctor" /></Field>
-          <Field label="Date" required><input type="date" className="input" min={isoDate()} value={day} onChange={(e) => setDay(e.target.value)} /></Field>
+          <Field label="Date" required hint="Any future date can be booked">
+            <input type="date" className="input" min={isoDate()} value={day} onChange={(e) => setDay(e.target.value)} />
+            <div className="row" style={{ gap: 4, marginTop: 4 }}>
+              {[['Today', 0], ['Tomorrow', 1], ['+1 week', 7], ['+2 weeks', 14]].map(([label, n]) => (
+                <button type="button" key={label} className={`tag ${day === isoDate(addDays(new Date(), n)) ? 'active' : ''}`} style={{ border: 0, cursor: 'pointer' }} onClick={() => setDay(isoDate(addDays(new Date(), n)))}>{label}</button>
+              ))}
+            </div>
+          </Field>
           <Field label="Visit type"><Select value={type} onChange={(e) => setType(e.target.value)} options={['New', 'Follow-up', 'Emergency', 'Teleconsult']} /></Field>
           <Field label="Source"><Select value={source} onChange={(e) => setSource(e.target.value)} options={['Walk-in', 'Phone', 'Online', 'Referral']} /></Field>
           <Field label="Reason for visit" className="span-2"><input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Fever for 3 days" /></Field>

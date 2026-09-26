@@ -111,6 +111,7 @@ export default function PatientProfile() {
             </Card>
           </div>
           <div className="stack">
+            <UpcomingAppointments rows={h.appointments} canBook={can('appointments', 'rw')} onBook={() => navigate(`/appointments?book=1&patient=${id}`)} />
             <Card title="Clinical summary">
               <KV items={[
                 ['Chronic conditions', p.chronicConditions?.length ? p.chronicConditions.map((c) => <span key={c} className="tag">{c}</span>) : 'None recorded'],
@@ -223,6 +224,22 @@ export default function PatientProfile() {
         {rx && <Prescription enc={rx} />}
       </Modal>
     </>
+  );
+}
+
+function UpcomingAppointments({ rows = [], canBook, onBook }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const upcoming = rows.filter((a) => new Date(a.date) >= today && ['Scheduled', 'Checked-in'].includes(a.status))
+    .sort((a, b) => new Date(a.date) - new Date(b.date) || a.timeSlot.localeCompare(b.timeSlot));
+  return (
+    <Card title="Upcoming appointments" actions={canBook && <Button size="sm" icon={CalendarPlus} onClick={onBook}>Book</Button>}>
+      {upcoming.length ? upcoming.slice(0, 5).map((a) => (
+        <div key={a._id} className="row between" style={{ padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+          <span><b>{date(a.date)}</b> · {slot12(a.timeSlot)}<div className="cell-sub">{a.doctor?.name} · {a.department?.name}</div></span>
+          <StatusBadge status={a.status} />
+        </div>
+      )) : <p className="muted small">No upcoming appointments.</p>}
+    </Card>
   );
 }
 
