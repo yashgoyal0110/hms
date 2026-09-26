@@ -63,7 +63,7 @@ export function StaffSelect({ role = 'doctor', value, onChange, placeholder = 'S
   const { data } = useFetch('/users/directory', { role, department });
   return (
     <select className="select" value={value || ''} onChange={(e) => onChange(e.target.value, data?.find((u) => u._id === e.target.value))} {...rest}>
-      <option value="">{includeAll ? 'All' : placeholder}</option>
+      <option value="">{includeAll ? `All ${role === 'doctor' ? 'doctors' : 'staff'}` : placeholder}</option>
       {(data || []).map((u) => (
         <option key={u._id} value={u._id}>{u.name}{u.specialization ? ` - ${u.specialization}` : u.designation ? ` - ${u.designation}` : ''}</option>
       ))}
