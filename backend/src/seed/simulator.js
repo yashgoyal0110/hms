@@ -402,12 +402,12 @@ async function simulateDay(ctx, date) {
   // 4. Discharges (stays of 2-6 days) and new admissions to keep occupancy realistic.
   for (const a of admitted) {
     const stay = (date - dayStart(a.admittedAt)) / DAY;
-    if (stay >= 2 && (stay >= 6 || chance(0.35))) await dischargePatient(ctx, a, at(date, int(10, 13), int(0, 59)));
+    if (stay >= 2 && (stay >= 7 || chance(0.22))) await dischargePatient(ctx, a, at(date, int(10, 13), int(0, 59)));
   }
   const current = await Admission.countDocuments({ status: 'Admitted' });
   const target = int(26, 34);
   const admitHour = isToday ? Math.max(0, Math.min(now.getHours() - 1, 18)) : 18;
-  for (let i = 0; i < Math.min(5, target - current); i += 1) await admitPatient(ctx, minTime(at(date, int(Math.min(7, admitHour), admitHour), int(0, 59)), now));
+  for (let i = 0; i < Math.min(8, target - current); i += 1) await admitPatient(ctx, minTime(at(date, int(Math.min(7, admitHour), admitHour), int(0, 59)), now));
 
   // 5. Surgeries: earlier cases are closed; book tomorrow's day-care list.
   const sx = await Surgery.find({ scheduledAt: { $lt: date }, status: { $in: ['Scheduled', 'In Progress'] } });
