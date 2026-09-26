@@ -540,7 +540,7 @@ export async function seedDemoData() {
         await Appointment.create({
           appointmentNo: await nextCode('APT'), patient: pool[k]._id, doctor: doc.user._id, department: doc.user.department, date, timeSlot: slot,
           type: chance(0.3) ? 'Follow-up' : 'New', source: pick(['Walk-in', 'Phone', 'Online']), status: 'Scheduled', createdBy: reception._id,
-          reason: pick(CLINICAL[doc.code] || CLINICAL.GM)[0],
+          reason: pick(CLINICAL[doc.code] || CLINICAL.GM)[0], simulated: true,
         });
       }
     }

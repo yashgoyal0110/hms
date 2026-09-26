@@ -3,12 +3,14 @@ import { config } from './config.js';
 import { connectDb } from './db.js';
 import { createApp } from './app.js';
 import { bootstrap } from './seed/bootstrap.js';
+import { startDemoSimulator } from './seed/simulator.js';
 
 async function main() {
   await connectDb();
   await bootstrap();
   const app = createApp();
   const server = app.listen(config.port, () => console.log(`[api] listening on :${config.port} (${config.env})`));
+  if (config.seedDemo) startDemoSimulator();
 
   const shutdown = (sig) => {
     console.log(`[api] ${sig} received, shutting down`);

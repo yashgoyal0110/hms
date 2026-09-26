@@ -27,6 +27,8 @@ const appointmentSchema = new Schema({
   invoice: ref('Invoice'),
   encounter: ref('Encounter'),
   createdBy: ref('User'),
+  // Created by the demo activity simulator (demo mode only); advanced automatically through the day.
+  simulated: { type: Boolean, default: false },
 }, { timestamps: true });
 appointmentSchema.index({ doctor: 1, date: 1, timeSlot: 1 });
 export const Appointment = model('Appointment', appointmentSchema);
