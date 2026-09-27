@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
+import { PRODUCT } from '../components/Brand.jsx';
 
 export default function QueueDisplay() {
   const [data, setData] = useState({ doctors: [] });
@@ -26,6 +27,7 @@ export default function QueueDisplay() {
         </div>
       </header>
       {!data.doctors.length && <div style={{ color: '#7f97a1', fontSize: 18, marginTop: 80, textAlign: 'center' }}>No patients in queue at the moment.</div>}
+      <div style={{ position: 'fixed', right: 24, bottom: 16, color: '#4f7482', fontSize: 12 }}>Powered by {PRODUCT.name}</div>
       <div className="queue-cards">
         {data.doctors.map((d) => (
           <div className="queue-card" key={d.doctor}>
