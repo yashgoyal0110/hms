@@ -54,7 +54,7 @@ export default function PatientProfile() {
               <b style={{ fontSize: 15 }}>{fullName(p)}</b>
               <span className="mono muted">{p.uhid}</span>
               <StatusBadge status={p.status} />
-              {activeAdmission && <Link to={`/ipd/${activeAdmission._id}`}><span className="badge info">Admitted · {activeAdmission.ward?.name} / {activeAdmission.bedNumber}</span></Link>}
+              {activeAdmission && (can('ipd') ? <Link to={`/ipd/${activeAdmission._id}`}><span className="badge info">Admitted · {activeAdmission.ward?.name} / {activeAdmission.bedNumber}</span></Link> : <span className="badge info">Admitted · {activeAdmission.ward?.name} / {activeAdmission.bedNumber}</span>)}
             </div>
             <div className="meta mt-8">
               <span>Age/Sex <b>{ageSex(p) || '-'}</b></span>
@@ -107,7 +107,7 @@ export default function PatientProfile() {
               </div>
             </Card>
             <Card title="Recent consultations" flush>
-              <EncounterTable rows={(h.encounters || []).slice(0, 5)} onOpen={openRx} />
+              <EncounterTable rows={(h.encounters || []).slice(0, 5)} onOpen={can('opd') ? openRx : undefined} />
             </Card>
           </div>
           <div className="stack">
@@ -134,7 +134,7 @@ export default function PatientProfile() {
         </div>
       )}
 
-      {tab === 'visits' && <Card flush><EncounterTable rows={h.encounters} onOpen={openRx} /></Card>}
+      {tab === 'visits' && <Card flush><EncounterTable rows={h.encounters} onOpen={can('opd') ? openRx : undefined} /></Card>}
 
       {tab === 'appointments' && (
         <Card flush>
@@ -155,7 +155,7 @@ export default function PatientProfile() {
         <Card flush>
           <DataTable
             rows={h.admissions}
-            onRowClick={(a) => navigate(`/ipd/${a._id}`)}
+            onRowClick={can('ipd') ? (a) => navigate(`/ipd/${a._id}`) : undefined}
             columns={[
               { key: 'no', label: 'IPD No.', render: (a) => <span className="mono">{a.admissionNo}</span> },
               { key: 'ward', label: 'Ward / Bed', render: (a) => `${a.ward?.name} / ${a.bedNumber}` },
@@ -173,7 +173,7 @@ export default function PatientProfile() {
         <Card flush>
           <DataTable
             rows={h.labOrders}
-            onRowClick={(o) => navigate(`/${o.category === 'lab' ? 'laboratory' : 'radiology'}/${o._id}`)}
+            onRowClick={(o) => can(o.category) && navigate(`/${o.category === 'lab' ? 'laboratory' : 'radiology'}/${o._id}`)}
             columns={[
               { key: 'no', label: 'Order', render: (o) => <span className="mono">{o.orderNo}</span> },
               { key: 'cat', label: 'Type', render: (o) => (o.category === 'lab' ? 'Laboratory' : 'Radiology') },

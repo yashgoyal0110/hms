@@ -60,7 +60,7 @@ export default function InvoiceDetail() {
       <PageHeader
         crumbs={<><Link to="/billing">Billing</Link> / {inv.invoiceNo}</>}
         title={`Invoice ${inv.invoiceNo}`}
-        sub={<>{inv.type} bill · {dateTime(inv.createdAt)} {inv.admission && <>· <Link to={`/ipd/${inv.admission._id}`}>{inv.admission.admissionNo}</Link></>}</>}
+        sub={<>{inv.type} bill · {dateTime(inv.createdAt)} {inv.admission && <>· {can('ipd') ? <Link to={`/ipd/${inv.admission._id}`}>{inv.admission.admissionNo}</Link> : inv.admission.admissionNo}</>}</>}
         actions={(
           <>
             {editable && <Button icon={Plus} onClick={() => setModal('item')}>Add charge</Button>}
@@ -111,7 +111,7 @@ export default function InvoiceDetail() {
             <Card title="Insurance claims" flush>
               <DataTable
                 rows={claims}
-                onRowClick={() => navigate('/insurance')}
+                onRowClick={can('insurance') ? () => navigate('/insurance') : undefined}
                 columns={[
                   { key: 'n', label: 'Claim', render: (c) => <span className="mono">{c.claimNo}</span> },
                   { key: 'p', label: 'Provider', render: (c) => c.provider },
