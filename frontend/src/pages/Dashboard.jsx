@@ -86,6 +86,8 @@ export default function Dashboard() {
         </Card>
       )}
 
+      <RoleWorklist role={role} />
+
       <div className="grid grid-main-side mb-16">
         {data.revenueTrend ? (
           <Card title="Collections - last 14 days">
@@ -146,6 +148,51 @@ function BedOccupancy({ data, canLink }) {
           );
         })}
       </div>
+    </Card>
+  );
+}
+
+/** Role-specific work queue on the home screen for diagnostic and pharmacy staff. */
+function RoleWorklist({ role }) {
+  const navigate = useNavigate();
+  const cfg = {
+    lab_technician: { title: 'Laboratory worklist', path: '/lab-orders', params: { category: 'lab', status: 'Ordered,Sample Collected,In Progress', limit: 8 }, base: '/laboratory', all: '/laboratory' },
+    radiologist: { title: 'Imaging worklist', path: '/lab-orders', params: { category: 'radiology', status: 'Ordered,Sample Collected,In Progress', limit: 8 }, base: '/radiology', all: '/radiology' },
+    pharmacist: { title: 'Prescriptions awaiting dispensing', path: '/pharmacy/prescriptions', params: {}, all: '/pharmacy?tab=rx' },
+  }[role];
+  const { data, loading } = useFetch(cfg ? cfg.path : null, cfg?.params);
+  if (!cfg) return null;
+  const rows = Array.isArray(data) ? data.slice(0, 8) : data?.data;
+  return (
+    <Card title={cfg.title} flush className="mb-16" actions={<Link to={cfg.all}>Open full list</Link>}>
+      {role === 'pharmacist' ? (
+        <DataTable
+          loading={loading}
+          rows={rows}
+          empty="No prescriptions waiting"
+          onRowClick={() => navigate('/pharmacy?tab=rx')}
+          columns={[
+            { key: 'p', label: 'Patient', render: (e) => <><div className="cell-main">{fullName(e.patient)}</div><div className="cell-sub">{e.patient?.uhid}</div></> },
+            { key: 'd', label: 'Doctor', render: (e) => e.doctor?.name },
+            { key: 'm', label: 'Medicines', render: (e) => e.prescriptions.map((m) => m.name).join(', ') },
+            { key: 't', label: 'Prescribed', render: (e) => date(e.createdAt) },
+          ]}
+        />
+      ) : (
+        <DataTable
+          loading={loading}
+          rows={rows}
+          empty="Worklist is clear"
+          onRowClick={(o) => navigate(`${cfg.base}/${o._id}`)}
+          columns={[
+            { key: 'n', label: 'Order', render: (o) => <span className="mono strong">{o.orderNo}</span> },
+            { key: 'p', label: 'Patient', render: (o) => <><div className="cell-main">{fullName(o.patient)}</div><div className="cell-sub">{o.patient?.uhid}</div></> },
+            { key: 't', label: 'Tests', render: (o) => o.items.map((i) => i.name).join(', ') },
+            { key: 'pr', label: 'Priority', render: (o) => (o.priority === 'Routine' ? <span className="muted">Routine</span> : <StatusBadge status={o.priority} />) },
+            { key: 's', label: 'Status', render: (o) => <StatusBadge status={o.status} /> },
+          ]}
+        />
+      )}
     </Card>
   );
 }
