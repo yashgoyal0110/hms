@@ -116,6 +116,17 @@ When `DEMO_MODE=true`, the sign-in page lists these accounts. Click one to fill 
 
 The system administrator account from `.env` (`ADMIN_EMAIL`) is separate from the demo accounts.
 
+### Live demo data
+
+With `SEED_DEMO=true`, a demo activity simulator (`backend/src/seed/simulator.js`) keeps the demo current as days pass:
+
+* **Daily rollover:** closes out the previous day's visits, finalises pending reports, discharges and admits patients (occupancy stays at about 30%), and writes nursing rounds. It also registers new patients, books day-care surgeries, posts monthly expenses, restocks pharmacy, and keeps a rolling 7-day appointment book (Sundays off). If the server was down, it catches up on missed days, up to 14.
+* **Every 10 minutes:** today's clinic follows the clock. Patients check in and get tokens, go into consultation, and are completed with prescriptions, bills, pharmacy sales and some lab orders. Today's surgeries start and finish on schedule.
+
+Only appointments the simulator created are advanced automatically. A consultation someone has edited is never completed behind their back. The simulator is off when `SEED_DEMO=false`.
+
+The registration form has a **Fill demo patient** button (demo mode only). It fills in a new, unique patient each time.
+
 ### Going live with real data
 
 1. Set `SEED_DEMO=false` and `DEMO_MODE=false` in `.env`.
@@ -142,6 +153,17 @@ set -a; . ./.env; set +a
 sudo docker exec -i hms-mongo mongorestore --archive --gzip --drop \
   -u "$MONGO_USER" -p "$MONGO_PASSWORD" --authenticationDatabase admin < hms-YYYYMMDD-HHMMSS.archive.gz
 ```
+
+### Health and verification
+
+* `GET /api/public/health` reports API and database status. The container healthcheck uses it.
+* `backend/scripts/smoke-test.mjs` is an end-to-end workflow test covering 69 checks: every role, RBAC denials, OPD→lab→pharmacy→billing, IPD→OT→discharge→insurance, purchasing and reports. Run it against demo data:
+
+```bash
+sudo docker exec -i hms-api node --input-type=module - < backend/scripts/smoke-test.mjs
+```
+
+It creates a test patient and related records, so don't run it against a live hospital database.
 
 ## Security
 
