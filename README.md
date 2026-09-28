@@ -29,6 +29,129 @@ Container, volume and network names keep the `hms-` prefix. It's infrastructure 
 | Patient communication | SMS/WhatsApp/email templates, automatic event notifications, bulk messaging, delivery log; in-app staff notifications |
 | Security & data | Role-based access for 8 roles, audit trail, account lockout, rate limiting, daily automated backups with download |
 
+## Architecture
+
+```
+Internet ──HTTPS──> host nginx (TLS via Let's Encrypt) ──> 127.0.0.1:8095
+                                                              │
+                     docker compose project "hms-yashgoyal"   ▼
+                  ┌────────────────────────────────────────────────────┐
+                  │ hms-web    nginx: React build + /api reverse proxy │
+                  │ hms-api    Node 22 / Express REST API              │
+                  │ hms-mongo  MongoDB 7 (not exposed to the host)     │
+                  │ hms-backup scheduled + on-demand mongodump          │
+                  └────────────────────────────────────────────────────┘
+```
+
+* Every container, volume and network is namespaced `hms-*` / `hms-yashgoyal*`, so the stack runs alongside other apps on the same VM without clashes.
+* Only `hms-web` publishes a port, and it binds to `127.0.0.1:8095`. MongoDB is reachable only on the internal Docker network.
+
+## DNS
+
+At your domain provider for `yashgoyal.sbs`:
+
+| Type | Host / Name | Value | TTL |
+|---|---|---|---|
+| A | `hms` | `34.47.247.40` | 300 |
+
+(If you use Cloudflare, set the record to *DNS only* (grey cloud) so the Let's Encrypt HTTP challenge and renewals work.)
+
+## Deployment
+
+### First-time server setup (already done on `gcp-vm`)
+
+```bash
+# 1. Code lives in ~/hms-yashgoyal ; create the environment file
+cp .env.example .env         # then set strong values:
+openssl rand -hex 24         # -> MONGO_PASSWORD
+openssl rand -hex 48         # -> JWT_SECRET
+# 2. Start the stack
+sudo docker compose up -d --build
+# 3. Reverse proxy + TLS (host nginx)
+sudo cp deploy/nginx-hms.conf /etc/nginx/sites-available/hms.yashgoyal.sbs
+sudo ln -s /etc/nginx/sites-available/hms.yashgoyal.sbs /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d hms.yashgoyal.sbs --redirect
+```
+
+The certificate renews automatically through the `certbot.timer` systemd timer.
+
+### Redeploying from a workstation
+
+```bash
+./deploy.sh      # packs the source (no secrets, no node_modules), ships it over gcloud SSH, rebuilds on the VM
+```
+
+The script never uploads `.env` or the GCP credential file. The server keeps its own `.env`.
+
+## Configuration (`.env`)
+
+| Variable | Purpose |
+|---|---|
+| `MONGO_USER`, `MONGO_PASSWORD`, `MONGO_DB` | Database credentials (internal network only) |
+| `JWT_SECRET` | Session signing key, 32 characters minimum |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | The first administrator account, created only when no administrator exists |
+| `WEB_PORT` | Localhost port that host nginx proxies to (default 8095) |
+| `SEED_DEMO` | `true` loads the demo hospital data once, into an empty database |
+| `DEMO_MODE` | `true` shows the demo-account shortcuts on the sign-in page |
+| `BACKUP_INTERVAL_HOURS`, `BACKUP_RETENTION_DAYS` | Backup schedule and retention |
+| `SMTP_*` | Email delivery. Without it, email messages are logged but not sent |
+| `SMS_WEBHOOK_URL`, `SMS_WEBHOOK_TOKEN`, `SMS_SENDER_ID` | SMS/WhatsApp gateway. The API POSTs `{to, message, channel, sender}` with a Bearer token; point it at your provider or a small adapter |
+| `TZ` | Time zone for reports and day boundaries (default `Asia/Kolkata`) |
+
+## Demo accounts
+
+When `DEMO_MODE=true`, the sign-in page lists these accounts. Click one to fill in its credentials, or double-click to sign in. All of them use the password `Demo@1234`.
+
+| Role | Email |
+|---|---|
+| Administrator | admin@demo.hms |
+| Doctor | dr.mehta@demo.hms (9 more doctors: dr.rao, dr.kulkarni, dr.kapoor, dr.singh, dr.khan, dr.nair, dr.malhotra, dr.iyer, dr.joshi) |
+| Nurse | nurse.priya@demo.hms |
+| Front office | reception@demo.hms |
+| Pharmacist | pharmacy@demo.hms |
+| Lab technician | lab@demo.hms |
+| Radiologist | radiology@demo.hms |
+| Accountant | accounts@demo.hms |
+
+The system administrator account from `.env` (`ADMIN_EMAIL`) is separate from the demo accounts.
+
+### Going live with real data
+
+1. Set `SEED_DEMO=false` and `DEMO_MODE=false` in `.env`.
+2. Start from an empty database: `sudo docker compose down -v`, which **deletes all data**, then `sudo docker compose up -d`.
+3. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`, change the password, then set up the hospital profile, departments, staff, wards, tariffs, test catalogue and medicines.
+
+## Operations
+
+```bash
+cd ~/hms-yashgoyal
+sudo docker compose ps                       # status
+sudo docker compose logs -f hms-api          # API logs
+sudo docker compose restart hms-api          # restart a service
+```
+
+### Backups
+
+* Automatic: a gzip-compressed `mongodump` archive every `BACKUP_INTERVAL_HOURS`, kept for `BACKUP_RETENTION_DAYS` days, in the `hms_backups` volume.
+* On demand: **Settings & Security → Backups → Back up now**, which also lists the archives for download.
+* Restore:
+
+```bash
+set -a; . ./.env; set +a
+sudo docker exec -i hms-mongo mongorestore --archive --gzip --drop \
+  -u "$MONGO_USER" -p "$MONGO_PASSWORD" --authenticationDatabase admin < hms-YYYYMMDD-HHMMSS.archive.gz
+```
+
+## Security
+
+* Passwords are hashed with bcrypt (cost 12). New passwords must meet a complexity policy.
+* An account locks for 15 minutes after 5 failed sign-ins. The sign-in and API endpoints are rate-limited.
+* Sessions use HttpOnly, Secure, SameSite=Strict cookies. They expire after 12 hours and are revoked when the password changes.
+* The server checks role-based permissions on every endpoint. The UI hides actions the role can't perform.
+* Every sign-in, failed sign-in and data change is written to an audit trail, kept for 2 years.
+* Input is sanitised against NoSQL injection. Helmet sets the security headers. The database is never exposed publicly.
+
 ## Local development
 
 ```bash
