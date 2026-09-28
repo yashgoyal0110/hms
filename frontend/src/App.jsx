@@ -5,7 +5,7 @@ import { Loading } from './components/ui.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import QueueDisplay from './pages/QueueDisplay.jsx';
-import Pending from './pages/Pending.jsx';
+import StatusPage from './pages/StatusPage.jsx';
 import { routes } from './routes.jsx';
 
 function RequireAuth({ children }) {
@@ -19,7 +19,7 @@ function RequireAuth({ children }) {
 function Guard({ module, children }) {
   const { can } = useAuth();
   if (module && !can(module)) {
-    return <Pending title="Access restricted" />;
+    return <StatusPage kind="denied" />;
   }
   return children;
 }
@@ -35,7 +35,7 @@ export default function App() {
         {routes.map((r) => (
           <Route key={r.path} path={r.path} element={<Guard module={r.module}>{r.element}</Guard>} />
         ))}
-        <Route path="*" element={<Pending title="Page not found" />} />
+        <Route path="*" element={<StatusPage kind="notfound" />} />
       </Route>
     </Routes>
   );
